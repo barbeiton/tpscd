@@ -2,42 +2,40 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import seaborn
+import random
 
 
 data0 = np.loadtxt('tiempos.txt', skiprows=1)
 data = np.loadtxt('tiemposCorregidos.txt', skiprows=1)
 
 
-""""
+
 # Test de permutacio'n para la media de los tiempos entre 
 # di'as soleados y lluviosos
 
-data0 = np.loadtxt('tiempos.txt', skiprows=1)
-data = np.loadtxt('tiemposCorregidos.txt', skiprows=1)
 
-tiempos_sol = data[:,1]
+tiempos_sol = data[:,1] 
+
 tiempos_llu = data[:,3]
-tiempos = tiempos_sol + tiempos_llu
 
-delta0 = np.mean(tiempos_sol) - np.mean(tiempos_llu)
-
-l1 = [0] * len(tiempos_sol)
-l2 = [1] * len(tiempos_llu)
-labels = l1 + l2
+delta0 = np.mean(tiempos_llu) - np.mean(tiempos_sol)
 
 times = 1000
 deltas = []
 for i in range(0, times):
-    random.shuffle(labels)
     tsol = 0
     tllu = 0
-    for tiempo in zip(tiempos, labels):
-        if tiempo[1] == 0:
+    for tiempo in zip(tiempos_sol, tiempos_llu):
+        r = random.random()
+        if  r < 0.5:
             tsol += tiempo[0]
-        elif tiempo[1] == 1:
+            tllu += tiempo[1]
+        else:
+            tsol += tiempo[1]
             tllu += tiempo[0]
 
-    deltas.insert(0, tsol/len(tiempos_sol) - tllu/len(tiempos_llu))
+
+    deltas.insert(0, tllu/len(tiempos_llu) - tsol/len(tiempos_sol))
 
 plt.hist(deltas, facecolor='g', alpha=0.75)
 plt.grid(True)
@@ -45,9 +43,8 @@ plt.axvline(delta0, color='r')
 plt.xlabel('Deltas')
 plt.show()
 
-""""
 
-""""
+"""
 plt.figure()
 plt.scatter(data0[:,0], data0[:,1],label = "Soleado")
 plt.scatter(data0[:,0], data0[:,2],label = "Nublado")
