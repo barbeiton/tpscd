@@ -16,32 +16,49 @@ data = np.loadtxt('tiemposCorregidos.txt', skiprows=1)
 
 tiempos_sol = data[:,1] 
 
+tiempos_nub = data[:,2]
+
 tiempos_llu = data[:,3]
 
-delta0 = np.mean(tiempos_llu) - np.mean(tiempos_sol)
+def test_permutacion(v1, v2, times, titulo):
+    delta0 = np.mean(v1) - np.mean(v2)
+    
+    deltas = []
+    p = 0
+    for i in range(0, times):
+        t1 = 0
+        t2 = 0
+        for tiempo in zip(v1, v2):
+            r = random.random()
+            if  r < 0.5:
+                t1 += tiempo[0]
+                t2 += tiempo[1]
+            else:
+                t1 += tiempo[1]
+                t2 += tiempo[0]
+        
+        ndelta = t2/len(v2) - t1/len(v1) 
+        deltas.insert(0, ndelta)
+        if ndelta > delta0:
+            p += 1
 
-times = 1000
-deltas = []
-for i in range(0, times):
-    tsol = 0
-    tllu = 0
-    for tiempo in zip(tiempos_sol, tiempos_llu):
-        r = random.random()
-        if  r < 0.5:
-            tsol += tiempo[0]
-            tllu += tiempo[1]
-        else:
-            tsol += tiempo[1]
-            tllu += tiempo[0]
+    pvalue = p / times
+    
+    print("p-valor: " + str(pvalue))
+
+    plt.hist(deltas, facecolor='g', alpha=0.75)
+    plt.grid(True)
+    plt.axvline(delta0, color='r')
+    plt.xlabel('Deltas')
+    plt.title(titulo)
+    plt.show()
+    #plt.savefig("Datos0", dpi = 300)
+
+test_permutacion(tiempos_llu, tiempos_sol, 1000, "Lluvioso vs soleado")
+test_permutacion(tiempos_llu, tiempos_nub, 1000, "Lluvioso vs nublado")
+test_permutacion(tiempos_sol, tiempos_nub, 1000, "Soleado vs nublado")
 
 
-    deltas.insert(0, tllu/len(tiempos_llu) - tsol/len(tiempos_sol))
-
-plt.hist(deltas, facecolor='g', alpha=0.75)
-plt.grid(True)
-plt.axvline(delta0, color='r')
-plt.xlabel('Deltas')
-plt.show()
 
 
 """
