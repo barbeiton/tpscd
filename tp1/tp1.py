@@ -10,14 +10,12 @@ data = np.loadtxt('tiemposCorregidos.txt', skiprows=1)
 
 
 
-# Test de permutacio'n para la media de los tiempos entre 
-# di'as soleados y lluviosos
+# Test de permutacio'n para la media de los tiempos en
+# las distintas condiciones climáticas
 
 
 tiempos_sol = data[:,1] 
-
 tiempos_nub = data[:,2]
-
 tiempos_llu = data[:,3]
 
 def test_permutacion(v1, v2, times, titulo):
@@ -46,17 +44,20 @@ def test_permutacion(v1, v2, times, titulo):
     
     print("p-valor: " + str(pvalue))
 
+    
     plt.hist(deltas, facecolor='g', alpha=0.75)
     plt.grid(True)
     plt.axvline(delta0, color='r')
     plt.xlabel('Deltas')
     plt.title(titulo)
-    plt.show()
-    #plt.savefig("Datos0", dpi = 300)
+    #plt.show()
+    plt.savefig(titulo, dpi = 300)
+    plt.close()
 
-test_permutacion(tiempos_llu, tiempos_sol, 1000, "Lluvioso vs soleado")
-test_permutacion(tiempos_llu, tiempos_nub, 1000, "Lluvioso vs nublado")
-test_permutacion(tiempos_sol, tiempos_nub, 1000, "Soleado vs nublado")
+test_permutacion(tiempos_llu, tiempos_sol, 100000, "Lluvioso vs Soleado")
+test_permutacion(tiempos_llu, tiempos_nub, 100000, "Lluvioso vs Nublado")
+test_permutacion(tiempos_sol, tiempos_nub, 100000, "Soleado vs Nublado")
+test_permutacion(tiempos_nub, tiempos_sol, 100000, "Nublado vs Soleado")
 
 
 
