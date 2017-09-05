@@ -136,7 +136,7 @@ testPearson["Sol - Nublado"] = stats.pearsonr(tiempos_sol, tiempos_nub)
 graficarTabla("Pearson", tituloCorrelacion, testPearson)
 
 
-# #### Test de Muestras Apareadas (Tabla 3)
+# #### t-Test de Muestras Apareadas (Tabla 3)
 # 
 
 # In[11]:
@@ -205,5 +205,4 @@ def test_permutacion(v1, v2, times, titulo):
 test_permutacion(tiempos_llu, tiempos_sol, 100000, "Lluvioso vs Soleado")
 test_permutacion(tiempos_llu, tiempos_nub, 100000, "Lluvioso vs Nublado")
 test_permutacion(tiempos_sol, tiempos_nub, 100000, "Soleado vs Nublado")
-test_permutacion(tiempos_nub, tiempos_sol, 100000, "Nublado vs Soleado")
 
