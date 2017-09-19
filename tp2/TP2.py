@@ -11,10 +11,12 @@ import glob
 
 "Path a los datos de un paciente"
 #P='/home/laura/Documents/UBA/DataScience/TP2/S03.mat'
-#P1 = '/media/nbarbeito/DISK_IMG/TP2/S01.mat'
+P = '/media/nbarbeito/DISK_IMG/TP2/S01.mat'
 #P = '/home/nico/Descargas/S02.mat'
 #S = '/home/nico/Descargas/P02.mat'
 
+#path = '/home/laura/Documents/UBA/DataScience/TP2/*.mat'
+path = '/media/nbarbeito/DISK_IMG/TP2/*.mat'
 
 def Mat2Data(filename):
     """ Lee los datos desde filename (.mat) a un np array """
@@ -108,7 +110,6 @@ def b(paciente):
     freq,pot= welch(b, fs=250, nfft=2048)
     return freq,pot
 
-path = '/home/laura/Documents/UBA/DataScience/TP2/*.mat'
 def b1(path):
     files=glob.glob(path)
     for file in files:
@@ -120,11 +121,39 @@ def b1(path):
     plt.xlim(0,47)
     plt.show()        
 
-        
+def c(paciente, min, max):
+	freq, pot = b(paciente)
+	banda_pot = [10e18 * p[1] for p in zip(freq, pot) if p[0] < max and p[0] >= min]
+	return banda_pot
+	
+def c_plot(paciente, min, max):
+	banda_pot = c(paciente, min, max)
+	seaborn.swarmplot(data=banda_pot)
+	plt.show()
+
+def integrar(paciente, min, max):
+	return np.sum(c(paciente, min, max))
+	
+def d(path):
+	#frecuencias = dict()
+	frecuencias = {'alpha': [], 'beta': []}
+	files = glob.glob(path)
+	for file in files:
+		paciente = Mat2Data(file)
+		print(file)
+		#alpha.append(integrar(paciente, 8, 13))
+		frecuencias['alpha'].append(integrar(paciente, 8, 13))
+		frecuencias['beta'].append(integrar(paciente, 13, 30))
+		
+	seaborn.swarmplot(data=frecuencias['alpha'])
+	seaborn.swarmplot(data=frecuencias['beta'])
+	plt.show()
     
-#p = Mat2Data(P)
+p = Mat2Data(P)
 #plot_media(p, 0)
 #plot_epocs(p)
 #a1(p)
 #a2(p)
-b1(path)
+#b1(path)
+#c_plot(p)
+d(path)
