@@ -5,18 +5,20 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn
+import pandas as pd
 from scipy.signal import welch
 from scipy.io import loadmat  # this is the SciPy module that loads mat-files
 import glob 
 
-"Path a los datos de un paciente"
+"Paths varios"
 #P='/home/laura/Documents/UBA/DataScience/TP2/S03.mat'
-P = '/media/nbarbeito/DISK_IMG/TP2/S01.mat'
+#P = '/media/nbarbeito/DISK_IMG/TP2/S01.mat'
 #P = '/home/nico/Descargas/S02.mat'
 #S = '/home/nico/Descargas/P02.mat'
 
 #path = '/home/laura/Documents/UBA/DataScience/TP2/*.mat'
-path = '/media/nbarbeito/DISK_IMG/TP2/*.mat'
+#path = '/media/nbarbeito/DISK_IMG/TP2/*.mat'
+path = '/home/nico/Descargas/datos EEG/*.mat'
 
 def Mat2Data(filename):
     """ Lee los datos desde filename (.mat) a un np array """
@@ -122,38 +124,45 @@ def b1(path):
     plt.show()        
 
 def c(paciente, min, max):
-	freq, pot = b(paciente)
-	banda_pot = [10e18 * p[1] for p in zip(freq, pot) if p[0] < max and p[0] >= min]
-	return banda_pot
-	
+    freq, pot = b(paciente)
+    banda_pot = [10e18 * p[1] for p in zip(freq, pot) if p[0] < max and p[0] >= min]
+    return banda_pot
+
 def c_plot(paciente, min, max):
-	banda_pot = c(paciente, min, max)
-	seaborn.swarmplot(data=banda_pot)
-	plt.show()
+    banda_pot = c(paciente, min, max)
+    seaborn.swarmplot(data=banda_pot)
+    plt.show()
 
 def integrar(paciente, min, max):
-	return np.sum(c(paciente, min, max))
-	
-def d(path):
-	#frecuencias = dict()
-	frecuencias = {'alpha': [], 'beta': []}
-	files = glob.glob(path)
-	for file in files:
-		paciente = Mat2Data(file)
-		print(file)
-		#alpha.append(integrar(paciente, 8, 13))
-		frecuencias['alpha'].append(integrar(paciente, 8, 13))
-		frecuencias['beta'].append(integrar(paciente, 13, 30))
-		
-	seaborn.swarmplot(data=frecuencias['alpha'])
-	seaborn.swarmplot(data=frecuencias['beta'])
-	plt.show()
+    return np.sum(c(paciente, min, max))
+
+def graficar_bandas(path):
+    """ Resuelve el ejercicio d """
+    banda = pd.DataFrame(columns = ['delta', 'theta', 'alpha', 'beta', 'gamma'], index=range(1,21))
     
-p = Mat2Data(P)
+    files = glob.glob(path)
+    i = 0
+    for file in files:
+        print(file)
+        paciente = Mat2Data(file)
+
+        delta = integrar(paciente, 0, 4)
+        theta = integrar(paciente, 4, 8)
+        alpha = integrar(paciente, 8, 13)
+        beta = integrar(paciente, 13, 30)
+        gamma = integrar(paciente, 30, 125)
+
+        banda.loc[i] = [delta, theta, alpha, beta, gamma]
+        i = i + 1
+        
+    seaborn.swarmplot(data=banda)
+    plt.show()
+    
+#p = Mat2Data(P)
 #plot_media(p, 0)
 #plot_epocs(p)
 #a1(p)
 #a2(p)
 #b1(path)
 #c_plot(p)
-d(path)
+graficar_bandas(path)
