@@ -190,6 +190,7 @@ def c(path, log_scale=True):
     data = pd.DataFrame.from_dict(alpha)
     seaborn.swarmplot(data=data)
     #seaborn.violinplot(data=data) # si se descomenta hace ambos
+
     if not log_scale:
         plt.ylim(0, 10e-18)
     plt.show()
@@ -200,17 +201,37 @@ def p_total(paciente, min, max, escala=1):
     
     return np.sum(filtrar(paciente, min, max, escala))
 
+def test_estadistico(banda):
+    """ Aplica los test elegidos a las bandas de frecuencia (banda) """
+    
+    _, pv = stats.f_oneway(banda['delta'], banda['theta'], banda['alpha'], banda['beta'], banda['gamma'])
+    print("ANOVA test: " + str(pv))
+
+    _, pv = stats.ttest_rel(banda['delta'], banda['theta'])
+    print("t-test (delta vs theta) " + str(pv))
+    
+    _, pv = stats.ttest_rel(banda['theta'], banda['alpha'])
+    print("t-test (theta vs alpha) "+ str(pv))
+    
+    _, pv = stats.ttest_rel(banda['alpha'], banda['beta'])
+    print("t-test (alpha vs beta) "+ str(pv))
+    
+    _, pv = stats.ttest_rel(banda['beta'], banda['gamma'])
+    print("t-test (beta vs gamma) "+ str(pv))
+
+
 
 def d(path, log_scale=True):
     """ Resuelve el ejercicio d """
     # Si no se usa log_scale, hay que tunear la escala en el filter
     # (10e18) o setear bien el y lim que esta comentado abajo
-    
-    cols = ['delta', 'theta', 'alpha', 'beta', 'gamma'] 
-    banda = pd.DataFrame(columns=cols, index=range(1,21))
-    
+   
     files = glob.glob(path)
-    i = 0
+
+    cols = ['delta', 'theta', 'alpha', 'beta', 'gamma'] 
+    banda = pd.DataFrame(columns=cols, index=range(1, len(files) + 1))
+    
+    i = 1
     for file in files:
         print(file)
         paciente = Mat2Data(file)
@@ -229,6 +250,8 @@ def d(path, log_scale=True):
 
         i = i + 1
 
+    test_estadistico(banda)
+
     seaborn.swarmplot(data=banda)
     if not log_scale:
         plt.ylim(0, 10e-18)
@@ -241,10 +264,11 @@ def e(path, log_scale=True):
     # Si no se usa log_scale, hay que tunear la escala en el filter
     # (10e18) o setear bien el y lim que esta comentado abajo
     
-    cols = ['delta', 'theta', 'alpha', 'beta', 'gamma'] 
-    banda = pd.DataFrame(columns=cols, index=range(1,5))
-    
     files = glob.glob(path)
+    
+    cols = ['delta', 'theta', 'alpha', 'beta', 'gamma'] 
+    banda = pd.DataFrame(columns=cols, index=range(1, len(files) + 1))
+    
     i = 1
     for file in files:
         print(file)
@@ -264,15 +288,13 @@ def e(path, log_scale=True):
 
         i = i + 1
 
-    """
-    _, pv = stats.f_oneway(banda['delta'], banda['theta'], banda['alpha'], banda['beta'], banda['gamma'])
-    print(pv)
-    """
+    test_estadistico(banda)
 
     seaborn.swarmplot(data=banda)
     if not log_scale:
         plt.ylim(0, 10e-18)
     plt.show()
+
 
 p = Mat2Data(S02)
 #plot_media(p, 0)
@@ -283,5 +305,5 @@ p = Mat2Data(S02)
 #a2(p)
 #b(path)
 #c(path)
-d(path)
-#e(path)
+#d(path)
+e(path)
