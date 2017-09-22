@@ -6,29 +6,21 @@ import matplotlib
 import matplotlib.pyplot as plt
 import seaborn
 import pandas as pd
+import glob 
+import sys
+import getopt
 from scipy import stats
 from scipy.signal import welch
 from scipy.io import loadmat  # this is the SciPy module that loads mat-files
-import glob 
 
+""" *********** """
 
-"""
-P = '/home/laura/Documents/UBA/DataScience/TP2/S03.mat'
-#path = '/home/laura/Documents/UBA/DataScience/TP2/*.mat'
-"""
-
-
-"""
-S01 = '/media/nbarbeito/DISK_IMG/TP2/S01.mat'
-path = '/media/nbarbeito/DISK_IMG/TP2/*.mat'
-"""
-
-
-P02 = '/home/nico/Descargas/datos EEG/P02.mat'
-P03 = '/home/nico/Descargas/datos EEG/P03.mat'
-S01 = '/home/nico/Descargas/datos EEG/S01.mat'
-S02 = '/home/nico/Descargas/datos EEG/S02.mat'
-path = '/home/nico/Descargas/datos EEG/*.mat'
+def uso():
+    print("Para ejecutar el código:")
+    print("  python3 TP2.py -S path_sujetos")
+    print("  python3 TP2.py -s sujeto_file")
+    print("Donde path_sujetos es el directorio con los datos y sujeto_file es un archivo de un sujeto")
+    sys.exit()
 
 
 def Mat2Data(filename):
@@ -39,94 +31,114 @@ def Mat2Data(filename):
     return mdata
 
 
-def calcular_media(paciente, epoch):
+def calcular_media(sujeto, epoch):
     """ Calcula la media entre los electrodos 8, 44, 80, 131 y 185,
-    para un paciente y epoch"""
+    para un sujeto y epoch.
+    
+    sujeto : numpy array
+    """
 
-    return np.mean([paciente[epoch][7], 
-        paciente[epoch][43],
-        paciente[epoch][79],
-        paciente[epoch][130], 
-        paciente[epoch][184]], axis=0)
+    return np.mean([sujeto[epoch][7], 
+        sujeto[epoch][43],
+        sujeto[epoch][79],
+        sujeto[epoch][130], 
+        sujeto[epoch][184]], axis=0)
 
 
-def plot_media(paciente, epoch):
+def plot_media(sujeto, epoch):
     """ Grafica la media entre los electrodos 8, 44, 80, 131 y 185 y
-    los datos en dichos electrodos, para un paciente y epoch"""
+    los datos en dichos electrodos, para un sujeto y epoch
+    
+    sujeto : numpy array
+    """
 
     x=np.arange(0,801,4)
     for electrodo in [7, 43, 79, 130, 184]:
-        plt.plot(x,paciente[epoch][electrodo], linestyle='--')
+        plt.plot(x,sujeto[epoch][electrodo], linestyle='--')
     
-    plt.plot(x,calcular_media(paciente, epoch),'k')
+    plt.plot(x,calcular_media(sujeto, epoch),'k')
     
     plt.xlabel('Tiempo(ms)')
     plt.ylabel('V')
     plt.show()
 
 
-def analisis_espectral(serie):
-    """ Transformada de Welch para la serie de tiempo """
-
-    return welch(serie, fs=250, nfft=2048, nperseg=201)
-
-
-def plot_epocs(paciente):
-    """ Grafica todos los epocs de un paciente,
+def plot_epocs(sujeto):
+    """ Grafica todos los epocs de un sujeto,
         en el dominio de frecuencia promediando
-        los electrodos 7, 43, 130, 184 """
+        los electrodos 7, 43, 130, 184 
+        
+    sujeto : numpy array"""
 
-    for epoch in range(0, len(paciente)):
-        freq, pot = analisis_espectral(calcular_media(paciente, epoch))
+    for epoch in range(0, len(sujeto)):
+        freq, pot = analisis_espectral(calcular_media(sujeto, epoch))
         plt.plot(freq, pot)
     
-    #plt.xlim([0, 45])
+    plt.xlim([0, 50])
     plt.xlabel('Frecuencia (Hz)')
     plt.ylabel(r'$\frac{V^2}{Hz}$')
     plt.show()
 
 
-def a1(paciente):
-    """ Resolución del ejercicio a.1: heatmap de un paciente """
+def analisis_espectral(serie):
+    """ Transformada de Welch para la serie de tiempo serie"""
 
+    return welch(serie, fs=250, nfft=2048, nperseg=201)
+
+
+def a1(sujeto_file):
+    """ Resolución del ejercicio a.1: heatmap de un sujeto 
+    
+    sujeto_file : file path de un sujeto
+    """
+    
+    sujeto = Mat2Data(sujeto_file)
+    
     z=[]
-    for epoch in range(0, len(paciente)):
-        freq, pot = analisis_espectral(calcular_media(paciente, epoch))
-        z.append(pot) # No hay necesidad de ver las frecuencias mayores a 47Hz
+    for epoch in range(0, len(sujeto)):
+        freq, pot = analisis_espectral(calcular_media(sujeto, epoch))
+        z.append(pot[0:500]) # No hay necesidad de ver las frecuencias mayores a 47Hz
 
-    yticks = list(freq)
-    # ¿Cómo agregar bien los ticks en y?
-    # ¿Cómo agregar V^2 al colormap, el coso a la derecha?
     seaborn.heatmap(np.array(z).T, cmap="YlGnBu_r", xticklabels=100)
     plt.xlabel('Epoch')
-    plt.ylabel('Frequencia 50 <-> 0Hz')
+    plt.ylabel('Frequencia (HZ)')
     plt.show()
 
 
-def a2(paciente):
-    """Resolucion del ejercicio a.2"""
+def a2(sujeto_file):
+    """Resolucion del ejercicio a.2: 
+    potencia media entre epochs para cada electrodo en función de la
+    frecuencia
+
+    sujeto_file : file path de un sujeto
+    """
     
+    sujeto = Mat2Data(sujeto_file)
+
     z=[]
-    for electrodo in range(0, len(paciente[0])):
+    for electrodo in range(0, len(sujeto[0])):
         z=[]
-        for epoch in range(0, len(paciente)):
-            freq, pot = analisis_espectral(paciente[epoch][electrodo])
+        for epoch in range(0, len(sujeto)):
+            freq, pot = analisis_espectral(sujeto[epoch][electrodo])
             z.append(pot)
         plt.plot(freq, np.mean(z,axis=0))
 
     plt.xlabel('Frecuencia (Hz)')
     plt.ylabel(r'$\frac{V^2}{Hz}$')
-    plt.xlim(0,47)
+    plt.xlim([0,45])
     plt.show()        
 
 
-def b1(paciente):
-    """ Para un paciente hacer el analisis espectral
-    para la señal promedio entre electrodos y epochs"""
+def b1(sujeto):
+    """ Para un sujeto hacer el analisis espectral
+    para la señal promedio entre todos los  electrodos y las epochs
+    
+    sujeto : numpy array
+    """
     
     a=[]
-    for epoch in range(0, len(paciente)):
-        a.append(np.mean(paciente[epoch],axis=0)) # promedio electrodos
+    for epoch in range(0, len(sujeto)):
+        a.append(np.mean(sujeto[epoch],axis=0)) # promedio electrodos
 
     b = np.mean(a,axis=0) # promedio epochs
     freq,pot = analisis_espectral(b)
@@ -135,40 +147,45 @@ def b1(paciente):
 
 
 def b(path):
-    """ Resolucion del ejercicio b """
+    """ Resolucion del ejercicio b 
+    
+    
+    """
 
     files=glob.glob(path)
     
     for file in files:
         print(file)
         freq,pot=b1(Mat2Data(file))
-        plt.plot(freq,pot) # muestra los resultados de la fft para cada paciente
+        plt.plot(freq,pot) # muestra los resultados de la fft para cada sujeto
        
     plt.xlabel('Frecuencia (Hz)')
     plt.ylabel(r'$\frac{V^2}{Hz}$')
-    plt.xlim(0,47)
+    plt.xlim(0,50)
     plt.show()
 
 
-def filtrar(paciente, min, max, escala=1):
-    """ Dado un paciente devuelve la potencia de la señal
+def filtrar(sujeto, min, max, escala=1):
+    """ Dado un sujeto devuelve la potencia de la señal
     del promedio entre epocs y electrodos en la banda 
-    [min, max) """
+    [min, max)
+    
+    sujeto : numpy array
+    """
 
-    freq, pot = b1(paciente)
+    freq, pot = b1(sujeto)
     banda_pot = [escala * p[1] for p in zip(freq, pot) if p[0] < max and p[0] >= min]
     return banda_pot
 
 
-def c_plot(paciente, min, max):
-
-    banda_pot = filtrar(paciente, min, max, 10e18)
-    seaborn.swarmplot(data=banda_pot)
-    plt.show()
-
-
 def c(path, log_scale=True):
-    """ Resuelve el ejercicio c """
+    """ Resuelve el ejercicio c 
+    
+    Swarm plot de la banda alpha para cada sujeto
+
+    path : directorio con archivos de EEG de sujetos
+    log_scale : usar escala logarítmica base 10
+    """
     
     # Si no se usa log_scale, hay que tunear la escala en el filter
     # (10e18) o setear bien el y lim que esta comentado abajo
@@ -178,28 +195,34 @@ def c(path, log_scale=True):
     alpha = dict()
     for file in files:
         print(file)
-        paciente = Mat2Data(file)
-        nombre_paciente = file[-7:-4]
+        sujeto = Mat2Data(file)
+        nombre_sujeto = file[-7:-4]
 
         if log_scale:
-            alpha[nombre_paciente] = np.log10(filtrar(paciente, 8, 13))
+            alpha[nombre_sujeto] = np.log10(filtrar(sujeto, 8, 13))
 
         else:
-            alpha[nombre_paciente] = filtrar(paciente, 8, 13)
+            alpha[nombre_sujeto] = filtrar(sujeto, 8, 13)
 
     data = pd.DataFrame.from_dict(alpha)
     seaborn.swarmplot(data=data)
-    #seaborn.violinplot(data=data) # si se descomenta hace ambos
+    #seaborn.violinplot(data=data) # si se descomenta superpone ambos
 
     if not log_scale:
         plt.ylim(0, 10e-18)
+
+    plt.xlabel("Bandas de frecuencia")
+    if log_scale:
+        plt.ylabel("Potencia [log10]")
+    else:
+        plt.ylabel("Potencia")
     plt.show()
 
 
-def p_total(paciente, min, max, escala=1):
+def p_total(sujeto, min, max, escala=1):
     """ Devuelve la potencia total en la banda [min, max) """
     
-    return np.sum(filtrar(paciente, min, max, escala))
+    return np.sum(filtrar(sujeto, min, max, escala))
 
 def test_estadistico(banda):
     """ Aplica los test elegidos a las bandas de frecuencia (banda) """
@@ -222,7 +245,13 @@ def test_estadistico(banda):
 
 
 def d(path, log_scale=True):
-    """ Resuelve el ejercicio d """
+    """ Resuelve el ejercicio d 
+    Plot categórico de las potencias en las distintas bandas de frecuencia
+    para cada paciente. Se aplican test estadísticos apropiados.
+
+    path : directorio con archivos de EEG de sujetos
+    log_scale : usar escala logarítmica base 10
+    """
     # Si no se usa log_scale, hay que tunear la escala en el filter
     # (10e18) o setear bien el y lim que esta comentado abajo
    
@@ -234,13 +263,13 @@ def d(path, log_scale=True):
     i = 1
     for file in files:
         print(file)
-        paciente = Mat2Data(file)
+        sujeto = Mat2Data(file)
 
-        delta = p_total(paciente, 0, 4.0)
-        theta = p_total(paciente, 4.0, 8.0)
-        alpha = p_total(paciente, 8.0, 13.0)
-        beta = p_total(paciente, 13.0, 30.0)
-        gamma = p_total(paciente, 30.0, 125.0)
+        delta = p_total(sujeto, 0, 4.0)
+        theta = p_total(sujeto, 4.0, 8.0)
+        alpha = p_total(sujeto, 8.0, 13.0)
+        beta = p_total(sujeto, 13.0, 30.0)
+        gamma = p_total(sujeto, 30.0, 125.0)
 
         if log_scale:
             banda.loc[i] = np.log10([delta, theta, alpha, beta, gamma])
@@ -253,13 +282,20 @@ def d(path, log_scale=True):
     test_estadistico(banda)
 
     seaborn.swarmplot(data=banda)
+    
     if not log_scale:
         plt.ylim(0, 10e-18)
     plt.show()
 
 
 def e(path, log_scale=True):
-    """ Resuelve el ejercicio e """
+    """ Resuelve el ejercicio e
+    Plot categórico de las potencias en las distintas bandas de frecuencia
+    para cada paciente, normalizando los datos. Se aplican test estadísticos apropiados.
+
+    path : directorio con archivos de EEG de sujetos
+    log_scale : usar escala logarítmica base 10
+    """
 
     # Si no se usa log_scale, hay que tunear la escala en el filter
     # (10e18) o setear bien el y lim que esta comentado abajo
@@ -272,13 +308,13 @@ def e(path, log_scale=True):
     i = 1
     for file in files:
         print(file)
-        paciente = Mat2Data(file)
+        sujeto = Mat2Data(file)
 
-        delta = p_total(paciente, 0, 4.0) / 4.0
-        theta = p_total(paciente, 4.0, 8.0) / 4.0
-        alpha = p_total(paciente, 8.0, 13.0) / 5.0
-        beta = p_total(paciente, 13.0, 30.0) / 17.0
-        gamma = p_total(paciente, 30.0, 125.0) / 15.0
+        delta = p_total(sujeto, 0, 4.0) / 4.0
+        theta = p_total(sujeto, 4.0, 8.0) / 4.0
+        alpha = p_total(sujeto, 8.0, 13.0) / 5.0
+        beta = p_total(sujeto, 13.0, 30.0) / 17.0
+        gamma = p_total(sujeto, 30.0, 125.0) / 15.0 # filtro pone limite en 45hz
 
         if log_scale:
             banda.loc[i] = np.log10([delta, theta, alpha, beta, gamma])
@@ -291,19 +327,62 @@ def e(path, log_scale=True):
     test_estadistico(banda)
 
     seaborn.swarmplot(data=banda)
+   
     if not log_scale:
         plt.ylim(0, 10e-18)
     plt.show()
 
 
-p = Mat2Data(S02)
-#plot_media(p, 0)
-#plot_epocs(p)
+def main():
+    """ Procesa los argumentos de linea de comando 
+    y ejecuta las funciones que resuelven los ejercicios"""
+    
+    path = ''
+    sujeto_file = ''
+
+    try:
+        opts, _ = getopt.getopt(sys.argv[1:], 'S:s:', [])
+
+    except getopt.GetoptError:
+        uso()
+
+    if len(opts) == 0:
+        uso()
+    
+    for opt, arg in opts:
+        if opt == '-S':
+            if arg[-1] != '/':
+                arg = arg+'/'
+            path = arg+'*.mat'
+
+        elif opt == '-s':
+            sujeto_file = arg
+
+        else:
+            print("Opción no reconocida")
 
 
-#a1(p)
-#a2(p)
-#b(path)
-#c(path)
-#d(path)
-e(path)
+    #sujeto_file = '' # descomentar para cancelar la ejecucion, borrarlo dsp
+    if sujeto_file != '':
+        sujeto = Mat2Data(sujeto_file)
+
+        #plot_media(sujeto, 0)
+        #plot_epocs(sujeto)
+        a1(sujeto_file)
+        a2(sujeto_file)
+        
+    path = '' # descomentar para cancelar la ejecucion, borrarlo dsp
+    if path != '':
+        print("EJECUTANDO EJERCICIO b")
+        b(path)        
+        print("EJECUTANDO EJERCICIO c")
+        c(path)
+        print("EJECUTANDO EJERCICIO d")
+        d(path)
+        print("EJECUTANDO EJERCICIO e")
+        e(path)
+
+
+""" **********  """
+main()
+
