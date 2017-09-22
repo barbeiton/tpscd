@@ -221,7 +221,7 @@ def d(path, log_scale=True):
         beta = p_total(paciente, 13.0, 30.0)
         gamma = p_total(paciente, 30.0, 125.0)
 
-        if not log_scale:
+        if log_scale:
             banda.loc[i] = np.log10([delta, theta, alpha, beta, gamma])
 
         else:
@@ -283,5 +283,5 @@ p = Mat2Data(S02)
 #a2(p)
 #b(path)
 #c(path)
-#d(path)
+d(path)
 #e(path)
