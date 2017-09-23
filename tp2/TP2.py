@@ -19,6 +19,7 @@ def uso():
     print("Para ejecutar el código:")
     print("  python3 TP2.py -S path_sujetos")
     print("  python3 TP2.py -s sujeto_file")
+    print("  python3 TP2.py -S path_sujetos -s sujeto_file")
     print("Donde path_sujetos es el directorio con los datos y sujeto_file es un archivo de un sujeto")
     sys.exit()
 
@@ -224,8 +225,10 @@ def p_total(sujeto, min, max, escala=1):
     
     return np.sum(filtrar(sujeto, min, max, escala))
 
-def test_estadistico(banda):
-    """ Aplica los test elegidos a las bandas de frecuencia (banda) """
+def test_estadistico_entre_bandas(banda):
+    """ Aplica los test elegidos a las bandas de frecuencia (banda),
+    averigua si hay suficiente evidencia para afirmar que las medias son 
+    distintas"""
     
     _, pv = stats.f_oneway(banda['delta'], banda['theta'], banda['alpha'], banda['beta'], banda['gamma'])
     print("ANOVA test: " + str(pv))
@@ -244,89 +247,68 @@ def test_estadistico(banda):
 
 
 
-def d(path, log_scale=True):
-    """ Resuelve el ejercicio d 
+def dye(path, log_scale=True):
+    """ Resuelve el ejercicio d y el e
     Plot categórico de las potencias en las distintas bandas de frecuencia
-    para cada paciente. Se aplican test estadísticos apropiados.
+    para cada paciente. Para potencias normalizadas y no normalizadas.
+    Se aplican test estadísticos apropiados.
 
     path : directorio con archivos de EEG de sujetos
     log_scale : usar escala logarítmica base 10
     """
     # Si no se usa log_scale, hay que tunear la escala en el filter
     # (10e18) o setear bien el y lim que esta comentado abajo
-   
+  
+    print("RESOLVIENDO EJERCICIOS d Y e")
+
     files = glob.glob(path)
 
     cols = ['delta', 'theta', 'alpha', 'beta', 'gamma'] 
     banda = pd.DataFrame(columns=cols, index=range(1, len(files) + 1))
+    banda_norm = pd.DataFrame(columns=cols, index=range(1, len(files) + 1))
     
     i = 1
     for file in files:
         print(file)
         sujeto = Mat2Data(file)
-
+        
+        # Calculo la potencia total del sujeto en cada banda
         delta = p_total(sujeto, 0, 4.0)
         theta = p_total(sujeto, 4.0, 8.0)
         alpha = p_total(sujeto, 8.0, 13.0)
         beta = p_total(sujeto, 13.0, 30.0)
         gamma = p_total(sujeto, 30.0, 125.0)
 
+        # Calculo la potencia total normalizada en cada banda del sujeto 
+        delta_norm = delta / 4.0
+        theta_norm = theta / 4.0
+        alpha_norm = alpha / 5.0
+        beta_norm = beta / 17.0
+        gamma_norm = gamma / 15.0 # filtro pone limite en 45hz
+        
         if log_scale:
             banda.loc[i] = np.log10([delta, theta, alpha, beta, gamma])
+            banda_norm.loc[i] = np.log10([delta_norm, theta_norm, alpha_norm, beta_norm, gamma_norm])
 
         else:
             banda.loc[i] = [delta, theta, alpha, beta, gamma]
+            banda_norm.loc[i] = [delta_norm, theta_norm, alpha_norm, beta_norm, gamma_norm]
 
         i = i + 1
+   
 
-    test_estadistico(banda)
+    print("Test estadístico para potencias no normalizadas")
+    test_estadistico_entre_bandas(banda)
 
-    seaborn.swarmplot(data=banda)
-    
+    seaborn.swarmplot(data=banda)    
     if not log_scale:
         plt.ylim(0, 10e-18)
     plt.show()
 
+    print("Test estadístico para potencias normalizadas")
+    test_estadistico_entre_bandas(banda_norm)
 
-def e(path, log_scale=True):
-    """ Resuelve el ejercicio e
-    Plot categórico de las potencias en las distintas bandas de frecuencia
-    para cada paciente, normalizando los datos. Se aplican test estadísticos apropiados.
-
-    path : directorio con archivos de EEG de sujetos
-    log_scale : usar escala logarítmica base 10
-    """
-
-    # Si no se usa log_scale, hay que tunear la escala en el filter
-    # (10e18) o setear bien el y lim que esta comentado abajo
-    
-    files = glob.glob(path)
-    
-    cols = ['delta', 'theta', 'alpha', 'beta', 'gamma'] 
-    banda = pd.DataFrame(columns=cols, index=range(1, len(files) + 1))
-    
-    i = 1
-    for file in files:
-        print(file)
-        sujeto = Mat2Data(file)
-
-        delta = p_total(sujeto, 0, 4.0) / 4.0
-        theta = p_total(sujeto, 4.0, 8.0) / 4.0
-        alpha = p_total(sujeto, 8.0, 13.0) / 5.0
-        beta = p_total(sujeto, 13.0, 30.0) / 17.0
-        gamma = p_total(sujeto, 30.0, 125.0) / 15.0 # filtro pone limite en 45hz
-
-        if log_scale:
-            banda.loc[i] = np.log10([delta, theta, alpha, beta, gamma])
-
-        else:
-            banda.loc[i] = [delta, theta, alpha, beta, gamma]
-
-        i = i + 1
-
-    test_estadistico(banda)
-
-    seaborn.swarmplot(data=banda)
+    seaborn.swarmplot(data=banda_norm)
    
     if not log_scale:
         plt.ylim(0, 10e-18)
@@ -362,7 +344,7 @@ def main():
             print("Opción no reconocida")
 
 
-    #sujeto_file = '' # descomentar para cancelar la ejecucion, borrarlo dsp
+    sujeto_file = '' # descomentar para cancelar la ejecucion, borrarlo dsp
     if sujeto_file != '':
         sujeto = Mat2Data(sujeto_file)
 
@@ -371,16 +353,12 @@ def main():
         a1(sujeto_file)
         a2(sujeto_file)
         
-    path = '' # descomentar para cancelar la ejecucion, borrarlo dsp
+
+    #path = '' # descomentar para cancelar la ejecucion, borrarlo dsp
     if path != '':
-        print("EJECUTANDO EJERCICIO b")
-        b(path)        
-        print("EJECUTANDO EJERCICIO c")
-        c(path)
-        print("EJECUTANDO EJERCICIO d")
-        d(path)
-        print("EJECUTANDO EJERCICIO e")
-        e(path)
+        #b(path)        
+        #c(path)
+        dye(path)
 
 
 """ **********  """
