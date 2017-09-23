@@ -148,7 +148,7 @@ def b1(sujeto):
 
 
 def b(path):
-    """ Resolucion del ejercicio b 
+    """ Resolucion del ejercicio b
     
     
     """
@@ -178,45 +178,22 @@ def filtrar(sujeto, min, max, escala=1):
     banda_pot = [escala * p[1] for p in zip(freq, pot) if p[0] < max and p[0] >= min]
     return banda_pot
 
+def categorical_plot(data, log_scale=True):
+    """ Hace todos los categorical plots de seaborn """
 
-def c(path, log_scale=True):
-    """ Resuelve el ejercicio c 
-    
-    Swarm plot de la banda alpha para cada sujeto
-
-    path : directorio con archivos de EEG de sujetos
-    log_scale : usar escala logarítmica base 10
-    """
-    
-    # Si no se usa log_scale, hay que tunear la escala en el filter
-    # (10e18) o setear bien el y lim que esta comentado abajo
-    
-    files=sorted(glob.glob(path))
-    
-    alpha = dict()
-    for file in files:
-        print(file)
-        sujeto = Mat2Data(file)
-        nombre_sujeto = file[-7:-4]
-
-        if log_scale:
-            alpha[nombre_sujeto] = np.log10(filtrar(sujeto, 8, 13))
-
-        else:
-            alpha[nombre_sujeto] = filtrar(sujeto, 8, 13)
-
-    data = pd.DataFrame.from_dict(alpha)
     seaborn.swarmplot(data=data)
-    #seaborn.violinplot(data=data) # si se descomenta superpone ambos
 
-    if not log_scale:
-        plt.ylim(0, 10e-18)
-
-    plt.xlabel("Bandas de frecuencia")
+    """stripplot(data=data)
+    seaborn.boxplot(data=data)
+    seaborn.violinplot(data=data)
+    seaborn.lvplot(data=data)
+    seaborn.pointplot(data=data)
+    seaborn.barplot(data=data)
+    seaborn.countplot(data=data)"""
+    
+    plt.xlabel("Sujetos")
     if log_scale:
-        plt.ylabel("Potencia [log10]")
-    else:
-        plt.ylabel("Potencia")
+        plt.ylabel("Potencia (log10)")
     plt.show()
 
 
@@ -245,10 +222,87 @@ def test_estadistico_entre_bandas(banda):
     _, pv = stats.ttest_rel(banda['beta'], banda['gamma'])
     print("t-test (beta vs gamma) "+ str(pv))
 
+    _, pv = stats.ttest_rel(banda['delta'], banda['gamma'])
+    print("t-test (delta vs gamma) "+ str(pv))
 
 
-def dye(path, log_scale=True):
-    """ Resuelve el ejercicio d y el e
+def test_estadistico_entre_grupos(banda):
+    """Aplica los test elegidos para comparar las medias de 
+    distintas bandas entre los grupos"""
+
+    grupo1 = banda.query('group==1')
+    grupo2 = banda.query('group==2')
+
+    _, pv = stats.ttest_rel(grupo1['delta'], grupo2['delta'])
+    print("t-test (delta grupo1 vs delta grupo2) " + str(pv))
+
+    _, pv = stats.ttest_rel(grupo1['theta'], grupo2['theta'])
+    print("t-test (theta grupo1 vs theta grupo2) " + str(pv))
+
+    _, pv = stats.ttest_rel(grupo1['alpha'], grupo2['alpha'])
+    print("t-test (alpha grupo1 vs alpha grupo2) " + str(pv))
+
+    _, pv = stats.ttest_rel(grupo1['beta'], grupo2['beta'])
+    print("t-test (beta grupo1 vs beta grupo2) " + str(pv))
+
+    _, pv = stats.ttest_rel(grupo1['gamma'], grupo2['gamma'])
+    print("t-test (gamma grupo1 vs gamma grupo2) " + str(pv))
+
+
+def estadisticos_puntos_dye(banda, banda_norm, log_scale):
+    """ Test estadísticos (puntos d y e) """
+
+    print("Test estadístico para potencias no normalizadas")
+    test_estadistico_entre_bandas(banda)
+    
+    print("Test estadístico para potencias normalizadas")
+    test_estadistico_entre_bandas(banda_norm)
+
+    print("Test estadístico entre grupos")
+    test_estadistico_entre_grupos(banda)
+    
+    print("Test estadístico entre grupos, datos normalizados")
+    test_estadistico_entre_grupos(banda_norm)
+
+
+def escalar_log(banda):
+    """ Funcion para aplicar logaritmo(10) para
+    mejorar el grafico de los datos """
+
+    for i in range(1, banda.shape[0] + 1):
+        s = np.array(banda.loc[i].values, dtype=float)
+        banda.loc[i] = np.log10(s)
+    return banda
+
+
+def graficar_puntos_dye(banda, banda_norm, log_scale):
+    """ Graficos correspondientes a los puntos d y e """
+
+    if log_scale:
+        seaborn.swarmplot(data=escalar_log(banda).iloc[:, 0:5])
+        plt.ylabel("Potencia en escala log10")
+    else:
+        seaborn.swarmplot(data=banda.iloc[:, 0:5])
+        plt.ylim(10e-19, 10e-16)
+        plt.ylabel("Potencia")
+
+    plt.xlabel("Banda")
+    plt.show()
+
+    if log_scale:
+        seaborn.swarmplot(data=escalar_log(banda_norm).iloc[:, 0:5])
+        plt.ylabel("Potencia en escala log10")
+    else:
+        seaborn.swarmplot(data=banda_norm.iloc[:, 0:5])
+        plt.ylim(10e-19, 10e-16)
+        plt.ylabel("Potencia")
+
+    plt.xlabel("Banda")
+    plt.show()
+
+
+def cydye(path, log_scale=True):
+    """ Resuelve el ejercicio c, d y el e
     Plot categórico de las potencias en las distintas bandas de frecuencia
     para cada paciente. Para potencias normalizadas y no normalizadas.
     Se aplican test estadísticos apropiados.
@@ -256,64 +310,67 @@ def dye(path, log_scale=True):
     path : directorio con archivos de EEG de sujetos
     log_scale : usar escala logarítmica base 10
     """
-    # Si no se usa log_scale, hay que tunear la escala en el filter
-    # (10e18) o setear bien el y lim que esta comentado abajo
   
     print("RESOLVIENDO EJERCICIOS d Y e")
 
-    files = glob.glob(path)
+    files = sorted(glob.glob(path))
 
-    cols = ['delta', 'theta', 'alpha', 'beta', 'gamma'] 
+    cols = ['delta', 'theta', 'alpha', 'beta', 'gamma', 'group'] 
     banda = pd.DataFrame(columns=cols, index=range(1, len(files) + 1))
     banda_norm = pd.DataFrame(columns=cols, index=range(1, len(files) + 1))
+    banda_alpha = dict()
     
     i = 1
     for file in files:
         print(file)
         sujeto = Mat2Data(file)
+
+        if file[-7] == 'S':
+            group = 1
+        else:
+            group = 2
         
+        nombre_sujeto = file[-7:-4]
+
+        a = filtrar(sujeto, 8.0, 13.0)
+
         # Calculo la potencia total del sujeto en cada banda
+        # (punto d)
         delta = p_total(sujeto, 0, 4.0)
         theta = p_total(sujeto, 4.0, 8.0)
-        alpha = p_total(sujeto, 8.0, 13.0)
+        alpha = np.sum(a)
         beta = p_total(sujeto, 13.0, 30.0)
         gamma = p_total(sujeto, 30.0, 125.0)
 
         # Calculo la potencia total normalizada en cada banda del sujeto 
+        # Divido por el ancho de banda de cada banda
+        # (punto e)
         delta_norm = delta / 4.0
         theta_norm = theta / 4.0
         alpha_norm = alpha / 5.0
         beta_norm = beta / 17.0
         gamma_norm = gamma / 15.0 # filtro pone limite en 45hz
-        
+		
+        banda.loc[i] = [delta, theta, alpha, beta, gamma, group]
+        banda_norm.loc[i] = [delta_norm, theta_norm, alpha_norm, beta_norm, gamma_norm, group] 
+ 
+        # punto c
         if log_scale:
-            banda.loc[i] = np.log10([delta, theta, alpha, beta, gamma])
-            banda_norm.loc[i] = np.log10([delta_norm, theta_norm, alpha_norm, beta_norm, gamma_norm])
-
+            banda_alpha[nombre_sujeto] = np.log10(a)
         else:
-            banda.loc[i] = [delta, theta, alpha, beta, gamma]
-            banda_norm.loc[i] = [delta_norm, theta_norm, alpha_norm, beta_norm, gamma_norm]
-
+            banda_alpha[nombre_sujeto] = filtrar(sujeto, 8.0, 13.0)
+            
         i = i + 1
-   
+	
+    estadisticos_puntos_dye(banda, banda_norm, log_scale)       
+    
+    # Grafico correspondiente al punto c
+    df_banda_alpha = pd.DataFrame.from_dict(banda_alpha)
+    categorical_plot(df_banda_alpha, log_scale)
 
-    print("Test estadístico para potencias no normalizadas")
-    test_estadistico_entre_bandas(banda)
-
-    seaborn.swarmplot(data=banda)    
-    if not log_scale:
-        plt.ylim(0, 10e-18)
-    plt.show()
-
-    print("Test estadístico para potencias normalizadas")
-    test_estadistico_entre_bandas(banda_norm)
-
-    seaborn.swarmplot(data=banda_norm)
-   
-    if not log_scale:
-        plt.ylim(0, 10e-18)
-    plt.show()
-
+    # Graficos de los puntos d y e
+    graficar_puntos_dye(banda, banda_norm, log_scale)
+        
 
 def main():
     """ Procesa los argumentos de linea de comando 
@@ -344,7 +401,7 @@ def main():
             print("Opción no reconocida")
 
 
-    sujeto_file = '' # descomentar para cancelar la ejecucion, borrarlo dsp
+    #sujeto_file = '' # descomentar para cancelar la ejecucion, borrarlo dsp
     if sujeto_file != '':
         sujeto = Mat2Data(sujeto_file)
 
@@ -354,11 +411,10 @@ def main():
         a2(sujeto_file)
         
 
-    #path = '' # descomentar para cancelar la ejecucion, borrarlo dsp
+    path = '' # descomentar para cancelar la ejecucion, borrarlo dsp
     if path != '':
         #b(path)        
-        #c(path)
-        dye(path)
+        cydye(path)
 
 
 """ **********  """
