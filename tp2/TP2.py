@@ -401,7 +401,8 @@ def main():
             print("Opción no reconocida")
 
 
-    #sujeto_file = '' # descomentar para cancelar la ejecucion, borrarlo dsp
+    # sujeto_file = '' # descomentar para cancelar la ejecucion, borrarlo dsp
+    # Para ejecutar esto agregar la opción -s seguido de un sujeto
     if sujeto_file != '':
         sujeto = Mat2Data(sujeto_file)
 
@@ -411,7 +412,9 @@ def main():
         a2(sujeto_file)
         
 
-    path = '' # descomentar para cancelar la ejecucion, borrarlo dsp
+    # path = '' # descomentar para cancelar la ejecucion, borrarlo dsp
+    # Para ejecutar esto agregar la opción -S seguido por el directorio 
+    # donde están los archivos del eeg
     if path != '':
         #b(path)        
         cydye(path)
