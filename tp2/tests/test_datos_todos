@@ -1,0 +1,127 @@
+TEST: ttest_rel
+
+Test estadístico para potencias no normalizadas
+ANOVA test: 0.276797588128
+t-test (delta vs theta) 0.13852507436
+t-test (theta vs alpha) 0.843352144004
+t-test (alpha vs beta) 0.242629690615
+t-test (beta vs gamma) 0.27514941588
+t-test (delta vs gamma) 0.112277906584
+
+Test estadístico para potencias normalizadas
+ANOVA test: 0.110617701121
+t-test (delta vs theta) 0.13852507436
+t-test (theta vs alpha) 0.642528913659
+t-test (alpha vs beta) 0.407074313032
+t-test (beta vs gamma) 0.402886378976
+t-test (delta vs gamma) 0.11868072788
+
+Test estadístico entre grupos
+t-test (delta grupo1 vs delta grupo2) 0.252616520285
+t-test (theta grupo1 vs theta grupo2) 0.248700150663
+t-test (alpha grupo1 vs alpha grupo2) 0.351944515727
+t-test (beta grupo1 vs beta grupo2) 0.34172056669
+t-test (gamma grupo1 vs gamma grupo2) 0.338952594509
+
+Test estadístico entre grupos, datos normalizados
+t-test (delta grupo1 vs delta grupo2) 0.252616520285
+t-test (theta grupo1 vs theta grupo2) 0.248700150663
+t-test (alpha grupo1 vs alpha grupo2) 0.351944515727
+t-test (beta grupo1 vs beta grupo2) 0.34172056669
+t-test (gamma grupo1 vs gamma grupo2) 0.338952594509
+
+TEST: wilcoxon
+
+Test estadístico para potencias no normalizadas
+ANOVA test: 0.276797588128
+t-test (delta vs theta) 0.0793216796968
+t-test (theta vs alpha) 0.00150728684139
+t-test (alpha vs beta) 0.29587752267
+t-test (beta vs gamma) 8.85745768786e-05
+t-test (delta vs gamma) 8.85745768786e-05
+
+Test estadístico para potencias normalizadas
+ANOVA test: 0.110617701121
+t-test (delta vs theta) 0.0793216796968
+t-test (theta vs alpha) 0.0013245375248
+t-test (alpha vs beta) 0.0022039368924
+t-test (beta vs gamma) 0.0013245375248
+t-test (delta vs gamma) 8.85745768786e-05
+
+Test estadístico entre grupos
+t-test (delta grupo1 vs delta grupo2) 0.721276699029
+t-test (theta grupo1 vs theta grupo2) 0.241121368277
+t-test (alpha grupo1 vs alpha grupo2) 0.646462202664
+t-test (beta grupo1 vs beta grupo2) 0.646462202664
+t-test (gamma grupo1 vs gamma grupo2) 0.798859349996
+
+Test estadístico entre grupos, datos normalizados
+t-test (delta grupo1 vs delta grupo2) 0.721276699029
+t-test (theta grupo1 vs theta grupo2) 0.241121368277
+t-test (alpha grupo1 vs alpha grupo2) 0.646462202664
+t-test (beta grupo1 vs beta grupo2) 0.646462202664
+t-test (gamma grupo1 vs gamma grupo2) 0.798859349996
+
+TEST: ranksums
+
+Test estadístico para potencias no normalizadas
+ANOVA test: 0.276797588128
+t-test (delta vs theta) 0.481867368284
+t-test (theta vs alpha) 0.0398011455053
+t-test (alpha vs beta) 0.95685535037
+t-test (beta vs gamma) 0.0699312121613
+t-test (delta vs gamma) 0.000136700841979
+
+Test estadístico para potencias normalizadas
+ANOVA test: 0.110617701121
+t-test (delta vs theta) 0.481867368284
+t-test (theta vs alpha) 0.01860472501
+t-test (alpha vs beta) 0.0883520198232
+t-test (beta vs gamma) 0.104588262829
+t-test (delta vs gamma) 2.44504078393e-05
+
+Test estadístico entre grupos
+t-test (delta grupo1 vs delta grupo2) 0.820595839755
+t-test (theta grupo1 vs theta grupo2) 0.705456986111
+t-test (alpha grupo1 vs alpha grupo2) 0.939742989577
+t-test (beta grupo1 vs beta grupo2) 0.705456986111
+t-test (gamma grupo1 vs gamma grupo2) 0.820595839755
+
+Test estadístico entre grupos, datos normalizados
+t-test (delta grupo1 vs delta grupo2) 0.820595839755
+t-test (theta grupo1 vs theta grupo2) 0.705456986111
+t-test (alpha grupo1 vs alpha grupo2) 0.939742989577
+t-test (beta grupo1 vs beta grupo2) 0.705456986111
+t-test (gamma grupo1 vs gamma grupo2) 0.820595839755
+
+TEST: mannwhitneyu
+
+Test estadístico para potencias no normalizadas
+ANOVA test: 0.276797588128
+t-test (delta vs theta) 0.245167132255
+t-test (theta vs alpha) 0.0205617970302
+t-test (alpha vs beta) 0.483817304186
+t-test (beta vs gamma) 0.0360227152337
+t-test (delta vs gamma) 7.21912796576e-05
+
+Test estadístico para potencias normalizadas
+ANOVA test: 0.110617701121
+t-test (delta vs theta) 0.245167132255
+t-test (theta vs alpha) 0.00964618985328
+t-test (alpha vs beta) 0.0454536916253
+t-test (beta vs gamma) 0.053755679848
+t-test (delta vs gamma) 1.29799201979e-05
+
+Test estadístico entre grupos
+t-test (delta grupo1 vs delta grupo2) 0.425053369569
+t-test (theta grupo1 vs theta grupo2) 0.366864997848
+t-test (alpha grupo1 vs alpha grupo2) 0.484924988497
+t-test (beta grupo1 vs beta grupo2) 0.366864997848
+t-test (gamma grupo1 vs gamma grupo2) 0.425053369569
+
+Test estadístico entre grupos, datos normalizados
+t-test (delta grupo1 vs delta grupo2) 0.425053369569
+t-test (theta grupo1 vs theta grupo2) 0.366864997848
+t-test (alpha grupo1 vs alpha grupo2) 0.484924988497
+t-test (beta grupo1 vs beta grupo2) 0.366864997848
+t-test (gamma grupo1 vs gamma grupo2) 0.425053369569

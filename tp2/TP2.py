@@ -147,6 +147,22 @@ def b1(sujeto):
     return freq,pot
 
 
+def solo_algunos(sujeto):
+    """ Para un sujeto hacer el analisis espectral
+    para la señal promedio entre todos los  electrodos y las epochs
+    
+    sujeto : numpy array
+    """
+    
+    a=[]
+    for epoch in range(0, len(sujeto)):
+        a.append(calcular_media(sujeto, epoch)) # promedio electrodos
+        
+    b = np.mean(a,axis=0) # promedio epochs
+    freq,pot = analisis_espectral(b)        
+    return freq,pot
+
+
 def b(path):
     """ Resolucion del ejercicio b
     
@@ -202,7 +218,7 @@ def p_total(sujeto, min, max, escala=1):
     
     return np.sum(filtrar(sujeto, min, max, escala))
 
-def test_estadistico_entre_bandas(banda):
+def test_estadistico_entre_bandas(banda, test):
     """ Aplica los test elegidos a las bandas de frecuencia (banda),
     averigua si hay suficiente evidencia para afirmar que las medias son 
     distintas"""
@@ -210,59 +226,59 @@ def test_estadistico_entre_bandas(banda):
     _, pv = stats.f_oneway(banda['delta'], banda['theta'], banda['alpha'], banda['beta'], banda['gamma'])
     print("ANOVA test: " + str(pv))
 
-    _, pv = stats.ttest_rel(banda['delta'], banda['theta'])
+    _, pv = test(banda['delta'], banda['theta'])
     print("t-test (delta vs theta) " + str(pv))
     
-    _, pv = stats.ttest_rel(banda['theta'], banda['alpha'])
+    _, pv = test(banda['theta'], banda['alpha'])
     print("t-test (theta vs alpha) "+ str(pv))
     
-    _, pv = stats.ttest_rel(banda['alpha'], banda['beta'])
+    _, pv = test(banda['alpha'], banda['beta'])
     print("t-test (alpha vs beta) "+ str(pv))
     
-    _, pv = stats.ttest_rel(banda['beta'], banda['gamma'])
+    _, pv = test(banda['beta'], banda['gamma'])
     print("t-test (beta vs gamma) "+ str(pv))
 
-    _, pv = stats.ttest_rel(banda['delta'], banda['gamma'])
+    _, pv = test(banda['delta'], banda['gamma'])
     print("t-test (delta vs gamma) "+ str(pv))
 
 
-def test_estadistico_entre_grupos(banda):
+def test_estadistico_entre_grupos(banda, test):
     """Aplica los test elegidos para comparar las medias de 
     distintas bandas entre los grupos"""
 
     grupo1 = banda.query('group==1')
     grupo2 = banda.query('group==2')
 
-    _, pv = stats.ttest_rel(grupo1['delta'], grupo2['delta'])
+    _, pv = test(grupo1['delta'], grupo2['delta'])
     print("t-test (delta grupo1 vs delta grupo2) " + str(pv))
 
-    _, pv = stats.ttest_rel(grupo1['theta'], grupo2['theta'])
+    _, pv = test(grupo1['theta'], grupo2['theta'])
     print("t-test (theta grupo1 vs theta grupo2) " + str(pv))
 
-    _, pv = stats.ttest_rel(grupo1['alpha'], grupo2['alpha'])
+    _, pv = test(grupo1['alpha'], grupo2['alpha'])
     print("t-test (alpha grupo1 vs alpha grupo2) " + str(pv))
 
-    _, pv = stats.ttest_rel(grupo1['beta'], grupo2['beta'])
+    _, pv = test(grupo1['beta'], grupo2['beta'])
     print("t-test (beta grupo1 vs beta grupo2) " + str(pv))
 
-    _, pv = stats.ttest_rel(grupo1['gamma'], grupo2['gamma'])
+    _, pv = test(grupo1['gamma'], grupo2['gamma'])
     print("t-test (gamma grupo1 vs gamma grupo2) " + str(pv))
 
 
-def estadisticos_puntos_dye(banda, banda_norm, log_scale):
+def estadisticos_puntos_dye(banda, banda_norm, test):
     """ Test estadísticos (puntos d y e) """
 
     print("Test estadístico para potencias no normalizadas")
-    test_estadistico_entre_bandas(banda)
+    test_estadistico_entre_bandas(banda, test)
     
     print("Test estadístico para potencias normalizadas")
-    test_estadistico_entre_bandas(banda_norm)
+    test_estadistico_entre_bandas(banda_norm, test)
 
     print("Test estadístico entre grupos")
-    test_estadistico_entre_grupos(banda)
+    test_estadistico_entre_grupos(banda, test)
     
     print("Test estadístico entre grupos, datos normalizados")
-    test_estadistico_entre_grupos(banda_norm)
+    test_estadistico_entre_grupos(banda_norm, test)
 
 
 def escalar_log(banda):
@@ -361,9 +377,19 @@ def cydye(path, log_scale=True):
             banda_alpha[nombre_sujeto] = filtrar(sujeto, 8.0, 13.0)
             
         i = i + 1
-	
-    estadisticos_puntos_dye(banda, banda_norm, log_scale)       
+
+    print("TEST: ttest_rel, todos los electrodos")
+    estadisticos_puntos_dye(banda, banda_norm, stats.ttest_rel)
     
+    print("TEST: wilcoxon, todos los electrodos")
+    estadisticos_puntos_dye(banda, banda_norm, stats.wilcoxon)
+
+    print("TEST: ranksums ,todos los electrodos")
+    estadisticos_puntos_dye(banda, banda_norm, stats.ranksums)
+
+    print("TEST: mannwhitneyu, todos los electrodos")
+    estadisticos_puntos_dye(banda, banda_norm, stats.mannwhitneyu)
+
     # Grafico correspondiente al punto c
     df_banda_alpha = pd.DataFrame.from_dict(banda_alpha)
     categorical_plot(df_banda_alpha, log_scale)
