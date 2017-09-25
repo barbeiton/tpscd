@@ -98,9 +98,9 @@ def a1(sujeto_file):
     z=[]
     for epoch in range(0, len(sujeto)):
         freq, pot = analisis_espectral(calcular_media(sujeto, epoch))
-        z.append(pot[0:500]) # No hay necesidad de ver las frecuencias mayores a 47Hz
-
-    seaborn.heatmap(np.array(z).T, cmap="YlGnBu_r", xticklabels=100)
+        z.append(pot[0:400]) # No hay necesidad de ver las frecuencias mayores a 47Hz
+    df = pd.DataFrame(data=np.array(z).T, index=np.around(freq[0:400], decimals=1))
+    seaborn.heatmap(df, cmap="YlGnBu_r", xticklabels=100,yticklabels=20,cbar_kws={'label': r'$\frac{V^2}{Hz}$'})
     plt.xlabel('Epoch')
     plt.ylabel('Frequencia (HZ)')
     plt.show()
@@ -140,7 +140,6 @@ def b1(sujeto):
     a=[]
     for epoch in range(0, len(sujeto)):
         a.append(np.mean(sujeto[epoch],axis=0)) # promedio electrodos
-
     b = np.mean(a,axis=0) # promedio epochs
     freq,pot = analisis_espectral(b)
     
@@ -199,7 +198,7 @@ def categorical_plot(data, log_scale=True):
 
     seaborn.swarmplot(data=data)
 
-    """stripplot(data=data)
+    """seaborn.stripplot(data=data)
     seaborn.boxplot(data=data)
     seaborn.violinplot(data=data)
     seaborn.lvplot(data=data)
@@ -395,7 +394,7 @@ def cydye(path, log_scale=True):
     categorical_plot(df_banda_alpha, log_scale)
 
     # Graficos de los puntos d y e
-    graficar_puntos_dye(banda, banda_norm, log_scale)
+    #graficar_puntos_dye(banda, banda_norm, log_scale)
         
 
 def main():
