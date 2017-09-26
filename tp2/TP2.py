@@ -217,28 +217,38 @@ def p_total(sujeto, min, max, escala=1):
     
     return np.sum(filtrar(sujeto, min, max, escala))
 
+def test_shapiro_bandas(banda):
+    shapiro_delta=stats.shapiro(banda['delta'])
+    print("shapiro (delta) " + str(shapiro_delta))
+    shapiro_theta=stats.shapiro(banda['theta'])
+    print("shapiro (theta) " + str(shapiro_theta))
+    shapiro_alpha=stats.shapiro(banda['alpha'])
+    print("shapiro (alpha) " + str(shapiro_alpha))
+    shapiro_beta=stats.shapiro(banda['beta'])
+    print("shapiro (beta) " + str(shapiro_beta))
+    shapiro_gamma=stats.shapiro(banda['gamma'])
+    print("shapiro (gamma) " + str(shapiro_gamma))
+
+
 def test_estadistico_entre_bandas(banda, test):
     """ Aplica los test elegidos a las bandas de frecuencia (banda),
     averigua si hay suficiente evidencia para afirmar que las medias son 
     distintas"""
     
-    _, pv = stats.f_oneway(banda['delta'], banda['theta'], banda['alpha'], banda['beta'], banda['gamma'])
-    print("ANOVA test: " + str(pv))
-
     _, pv = test(banda['delta'], banda['theta'])
-    print("t-test (delta vs theta) " + str(pv))
+    print(" test (delta vs theta) " + str(pv))
     
     _, pv = test(banda['theta'], banda['alpha'])
-    print("t-test (theta vs alpha) "+ str(pv))
+    print("test (theta vs alpha) "+ str(pv))
     
     _, pv = test(banda['alpha'], banda['beta'])
-    print("t-test (alpha vs beta) "+ str(pv))
+    print("test (alpha vs beta) "+ str(pv))
     
     _, pv = test(banda['beta'], banda['gamma'])
-    print("t-test (beta vs gamma) "+ str(pv))
+    print("test (beta vs gamma) "+ str(pv))
 
     _, pv = test(banda['delta'], banda['gamma'])
-    print("t-test (delta vs gamma) "+ str(pv))
+    print("test (delta vs gamma) "+ str(pv))
 
 
 def test_estadistico_entre_grupos(banda, test):
@@ -249,19 +259,19 @@ def test_estadistico_entre_grupos(banda, test):
     grupo2 = banda.query('group==2')
 
     _, pv = test(grupo1['delta'], grupo2['delta'])
-    print("t-test (delta grupo1 vs delta grupo2) " + str(pv))
+    print("test (delta grupo1 vs delta grupo2) " + str(pv))
 
     _, pv = test(grupo1['theta'], grupo2['theta'])
-    print("t-test (theta grupo1 vs theta grupo2) " + str(pv))
+    print("test (theta grupo1 vs theta grupo2) " + str(pv))
 
     _, pv = test(grupo1['alpha'], grupo2['alpha'])
-    print("t-test (alpha grupo1 vs alpha grupo2) " + str(pv))
+    print("test (alpha grupo1 vs alpha grupo2) " + str(pv))
 
     _, pv = test(grupo1['beta'], grupo2['beta'])
-    print("t-test (beta grupo1 vs beta grupo2) " + str(pv))
+    print("test (beta grupo1 vs beta grupo2) " + str(pv))
 
     _, pv = test(grupo1['gamma'], grupo2['gamma'])
-    print("t-test (gamma grupo1 vs gamma grupo2) " + str(pv))
+    print("test (gamma grupo1 vs gamma grupo2) " + str(pv))
 
 
 def estadisticos_puntos_dye(banda, banda_norm, test):
@@ -377,8 +387,11 @@ def cydye(path, log_scale=True):
             
         i = i + 1
 
-    print("TEST: ttest_rel, todos los electrodos")
-    estadisticos_puntos_dye(banda, banda_norm, stats.ttest_rel)
+    print("Test estadí­stico Shapiro para bandas no normalizadas")
+    test_shapiro_bandas(banda)
+    
+    print("Test estadí­stico Shapiro para bandas normalizadas")
+    test_shapiro_bandas(banda_norm)
     
     print("TEST: wilcoxon, todos los electrodos")
     estadisticos_puntos_dye(banda, banda_norm, stats.wilcoxon)
@@ -394,7 +407,7 @@ def cydye(path, log_scale=True):
     categorical_plot(df_banda_alpha, log_scale)
 
     # Graficos de los puntos d y e
-    #graficar_puntos_dye(banda, banda_norm, log_scale)
+    graficar_puntos_dye(banda, banda_norm, log_scale)
         
 
 def main():
