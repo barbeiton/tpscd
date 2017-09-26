@@ -154,8 +154,20 @@ plt.xlabel('Grupo')
 plt.ylabel('Entropía en bits')
 plt.show()
 
+print("Test shapiro, entropía para grupo S"+str(stats.shapiro(entropias['S'])))
+print("Test shapiro, entropía para grupo P"+str(stats.shapiro(entropias['P'])))
+
+_, pv = stats.mannwhitneyu(entropias['S'], entropias['P'])
+print("Test MannW-hitney-U grupo S: " + str(pv))
+
+_, pv = stats.mannwhitneyu(entropias['S'], entropias['P'])
+print("Test MannW-hitney-U grupo P: " + str(pv))
+
+_, pv = stats.ranksums(entropias['S'], entropias['P'])
+print("Test ranksums grupo S: " + str(pv))
+
+_, pv = stats.ranksums(entropias['S'], entropias['P'])
+print("Test ranksums grupo P: " + str(pv))
+
 _, pv = stats.ttest_rel(entropias['S'], entropias['P'])
 print(pv)
-
-
-
