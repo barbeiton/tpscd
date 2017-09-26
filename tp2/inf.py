@@ -171,3 +171,15 @@ print("Test ranksums grupo P: " + str(pv))
 
 _, pv = stats.ttest_rel(entropias['S'], entropias['P'])
 print(pv)
+
+""" (algo asi creo q debería ser la parte 2 pero hay q darle forma)
+# computo la señal promedio para cada electrodo
+    b=[]
+    c=[]
+    for epoch in range(0, len(sujeto)):
+        b.append(np.mean(sujeto[epoch],axis=1)) # promedio cada electrodo    
+    serie = c.append(np.mean(b,axis=1)) # promedio epochs para cada electrodo
+
+electrodos=pd.DataFrame(serie,columns=list(range(0,256,1)))
+electrodos2=electrodos.apply(entropia, axis=1)
+"""
