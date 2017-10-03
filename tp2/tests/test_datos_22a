@@ -1,0 +1,8 @@
+Test shapiro, entropía para grupo S(0.5873854160308838, 3.913358523277566e-05)
+Test shapiro, entropía para grupo P(0.9556610584259033, 0.735494077205658)
+
+Test MannW-hitney-U: 0.00110110997125
+
+Test ranksums: 0.0019397281129
+
+Test ttest: 0.000592604527314

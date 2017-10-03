@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn
+import sys
 from scipy import stats
 from scipy.io import loadmat
 import glob
@@ -75,111 +76,99 @@ def entropia(serie):
     return -np.inner(p, np.log2(p))
 
 
-def entropia_bern():
-    """ Testeo para entropia para una variable 
-    bernoulli"""
-    ps = np.arange(0.01, 1, 0.1)
+def entropia_conjunta(serie1, serie2):
+    """ Calcula la entropía conjunta de las dos
+    series parámetro """
 
-    ent = []
-    for p in ps:
-        sample = []
-        for i in range(0, 1000):
-            r = np.random.random()
-            if r < p:
-                r = 0
+    bins1, s1 = symb(serie1)
+    bins2, s2 = symb(serie2)
+    
+    hist = {}
+    for ss1 in s1:
+        for ss2 in s2:
+            if str(ss1)+'-'+str(ss2) in hist:
+                hist[str(ss1)+'-'+str(ss2)] = hist[str(ss1)+'-'+str(ss2)] + 1
             else:
-                r = 1
+                hist[str(ss1)+'-'+str(ss2)] = 1
 
-            sample.append(r)
-        if not 0 in sample or not 1 in sample:
-            print("CERO CERO!")
-        ent.append(entropia(sample))
+    values = list(hist.values())
+    probs = np.divide(values, np.sum(values))
+    return -np.inner(probs, np.log2(probs))
 
-    plt.plot(ps, ent)
+
+def ej_2_2(file_path):
+    """ Resolución del ejercicio 2.2 """
+    
+    files=glob.glob(file_path)
+    entropias = {'S': [], 'P': []}
+    entropias_conj = {'S': [], 'P': []}
+
+    for file in files:
+        print(file)
+        sujeto = Mat2Data(file)
+        grupo_sujeto = file[-7]
+        
+        a=[]
+        b=[]
+        for epoch in range(0, len(sujeto)):
+            b.append(entropia_conjunta(sujeto[epoch][7], sujeto[epoch][43]))
+            for electrodo in range(0, len(sujeto[epoch])):
+                a.append(entropia(sujeto[epoch][electrodo]))
+            
+        entropias[grupo_sujeto].append(np.mean(a))
+        entropias_conj[grupo_sujeto].append(np.mean(b))
+
+
+    print("Tests para ejercicio 2.2.a")
+    
+    _, pv = stats.mannwhitneyu(entropias['S'], entropias['P'])
+    print("Test MannW-hitney-U: " + str(pv))
+    
+    _, pv = stats.ranksums(entropias['S'], entropias['P'])
+    print("Test ranksums: " + str(pv))
+
+    _, pv = stats.ttest_ind(entropias['S'], entropias['P'])
+    print("Test t-test: " + str(pv))
+    
+    seaborn.swarmplot(data=pd.DataFrame.from_dict(entropias))
+    plt.title('Entropía promedio de sujetos en ambos grupos')
+    plt.xlabel('Grupo')
+    plt.ylabel('Entropía en bits')
     plt.show()
 
-"""
-p = Mat2Data('/home/nico/Descargas/datos EEG/P01.mat')
-
-es = []
-epoch = 0
-for electrodo in range(0, len(p[epoch])):
-    es.append(entropia(p[epoch][electrodo]))
-
-plt.plot(es)
-plt.show()
-
-# Por alguna razón algunos electrodos tienen mas informacion
-# ¿Lo podriamos agregar al informe?
-plt.title("Electrodo 225")
-plt.plot(p[0][224])
-plt.show()
-
-plt.title("Electrodo 256")
-plt.plot(p[0][255])
-plt.show()
-"""
-
-def calcular_media(sujeto, epoch):
-    """ Calcula la media entre los electrodos 8, 44, 80, 131 y 185,
-    para un sujeto y epoch.
+    print("*****************************")
+    print("Tests para ejercicio 2.2.b")
     
-    sujeto : numpy array
-    """
+    _, pv = stats.mannwhitneyu(entropias_conj['S'], entropias_conj['P'])
+    print("Test MannW-hitney-U: " + str(pv))
     
-    return np.mean([sujeto[epoch][7],
-                    sujeto[epoch][43],
-                    sujeto[epoch][79],
-                    sujeto[epoch][130],
-                    sujeto[epoch][184]], axis=0)
+    _, pv = stats.ranksums(entropias_conj['S'], entropias_conj['P'])
+    print("Test ranksums: " + str(pv))
 
-files=glob.glob('/home/nico/Descargas/datos EEG/*.mat')
-entropias = {'S': [], 'P': []}
+    _, pv = stats.ttest_ind(entropias_conj['S'], entropias_conj['P'])
+    print("Test t-test: " + str(pv))
+    
+    seaborn.swarmplot(data=pd.DataFrame.from_dict(entropias_conj))
+    plt.title('Entropía conjunta promedio de sujetos en ambos grupos')
+    plt.xlabel('Grupo')
+    plt.ylabel('Entropía conjunta en bits')
+    plt.show()
 
-for file in files:
-    print(file)
-    sujeto = Mat2Data(file)
-    grupo_sujeto = file[-7]
 
-    # computo la señal promedio
-    a=[]
-    for epoch in range(0, len(sujeto)):
-        a.append(np.mean(sujeto[epoch],axis=0)) # promedio electrodos    
-    serie_prom = np.mean(a,axis=0) # promedio epochs
+if len(sys.argv) < 2:
+    print("Para ejecutar el código usar")
+    print("python3 inf.py dir")
+    print("Donde dir es el path que contiene los EEG de los sujetos")
+    sys.exit()
 
-    entropias[grupo_sujeto].append(entropia(serie_prom))
+path = sys.argv[1]
+if path[-1] != '/':
+    path = path+'/'
+    
+path = path+'*.mat'
 
-seaborn.swarmplot(data=pd.DataFrame.from_dict(entropias))
-plt.xlabel('Grupo')
-plt.ylabel('Entropía en bits')
-plt.show()
+ej_2_2(path)
 
-print("Test shapiro, entropía para grupo S"+str(stats.shapiro(entropias['S'])))
-print("Test shapiro, entropía para grupo P"+str(stats.shapiro(entropias['P'])))
 
-_, pv = stats.mannwhitneyu(entropias['S'], entropias['P'])
-print("Test MannW-hitney-U grupo S: " + str(pv))
 
-_, pv = stats.mannwhitneyu(entropias['S'], entropias['P'])
-print("Test MannW-hitney-U grupo P: " + str(pv))
 
-_, pv = stats.ranksums(entropias['S'], entropias['P'])
-print("Test ranksums grupo S: " + str(pv))
-
-_, pv = stats.ranksums(entropias['S'], entropias['P'])
-print("Test ranksums grupo P: " + str(pv))
-
-_, pv = stats.ttest_rel(entropias['S'], entropias['P'])
-print(pv)
-
-""" (algo asi creo q debería ser la parte 2 pero hay q darle forma)
-# computo la señal promedio para cada electrodo
-    b=[]
-    c=[]
-    for epoch in range(0, len(sujeto)):
-        b.append(np.mean(sujeto[epoch],axis=1)) # promedio cada electrodo    
-    serie = c.append(np.mean(b,axis=1)) # promedio epochs para cada electrodo
-
-electrodos=pd.DataFrame(serie,columns=list(range(0,256,1)))
-electrodos2=electrodos.apply(entropia, axis=1)
-"""
