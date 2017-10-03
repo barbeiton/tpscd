@@ -110,7 +110,6 @@ def a2(sujeto_file):
     """Resolucion del ejercicio a.2: 
     potencia media entre epochs para cada electrodo en función de la
     frecuencia
-
     sujeto_file : file path de un sujeto
     """
     
@@ -304,6 +303,7 @@ def graficar_puntos_dye(banda, banda_norm, log_scale):
     """ Graficos correspondientes a los puntos d y e """
 
     if log_scale:
+#        seaborn.violinplot(x='variable', y='value', hue='group', data=banda,inner='point')
         seaborn.violinplot(data=escalar_log(banda).iloc[:, 0:5],inner='point')
         plt.ylabel("Potencia en escala log10")
     else:
@@ -331,7 +331,6 @@ def cydye(path, log_scale=True):
     Plot categórico de las potencias en las distintas bandas de frecuencia
     para cada paciente. Para potencias normalizadas y no normalizadas.
     Se aplican test estadísticos apropiados.
-
     path : directorio con archivos de EEG de sujetos
     log_scale : usar escala logarítmica base 10
     """
@@ -386,7 +385,8 @@ def cydye(path, log_scale=True):
             banda_alpha[nombre_sujeto] = filtrar(sujeto, 8.0, 13.0)
             
         i = i + 1
-
+#    df=pd.melt(banda, value_vars=['delta', 'theta', 'alpha', 'beta', 'gamma'], id_vars='group')    
+#    print(df)
     print("Test estadí­stico Shapiro para bandas no normalizadas")
     test_shapiro_bandas(banda)
     
@@ -394,7 +394,7 @@ def cydye(path, log_scale=True):
     test_shapiro_bandas(banda_norm)
     
     print("TEST: wilcoxon, todos los electrodos")
-    estadisticos_puntos_dye(banda, banda_norm, stats.wilcoxon)
+#    estadisticos_puntos_dye(banda, banda_norm, stats.wilcoxon)
 
     print("TEST: ranksums ,todos los electrodos")
     estadisticos_puntos_dye(banda, banda_norm, stats.ranksums)
@@ -460,4 +460,3 @@ def main():
 
 """ **********  """
 main()
-
