@@ -439,22 +439,18 @@ def main():
             print("Opción no reconocida")
 
 
-    # sujeto_file = '' # descomentar para cancelar la ejecucion, borrarlo dsp
     # Para ejecutar esto agregar la opción -s seguido de un sujeto
     if sujeto_file != '':
         sujeto = Mat2Data(sujeto_file)
 
-        #plot_media(sujeto, 0)
-        #plot_epocs(sujeto)
         a1(sujeto_file)
         a2(sujeto_file)
         
 
-    # path = '' # descomentar para cancelar la ejecucion, borrarlo dsp
     # Para ejecutar esto agregar la opción -S seguido por el directorio 
     # donde están los archivos del eeg
     if path != '':
-        #b(path)        
+        b(path)        
         cydye(path)
 
 
