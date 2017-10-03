@@ -196,7 +196,7 @@ def filtrar(sujeto, min, max, escala=1):
 def categorical_plot(data, log_scale=True):
     """ Hace todos los categorical plots de seaborn """
 
-    seaborn.swarmplot(data=data)
+    seaborn.violinplot(data=data)
 
     """seaborn.stripplot(data=data)
     seaborn.boxplot(data=data)
@@ -304,10 +304,10 @@ def graficar_puntos_dye(banda, banda_norm, log_scale):
     """ Graficos correspondientes a los puntos d y e """
 
     if log_scale:
-        seaborn.swarmplot(data=escalar_log(banda).iloc[:, 0:5])
+        seaborn.violinplot(data=escalar_log(banda).iloc[:, 0:5],inner='point')
         plt.ylabel("Potencia en escala log10")
     else:
-        seaborn.swarmplot(data=banda.iloc[:, 0:5])
+        seaborn.violinplot(data=banda.iloc[:, 0:5],inner='point')
         plt.ylim(10e-19, 10e-16)
         plt.ylabel("Potencia")
 
@@ -315,10 +315,10 @@ def graficar_puntos_dye(banda, banda_norm, log_scale):
     plt.show()
 
     if log_scale:
-        seaborn.swarmplot(data=escalar_log(banda_norm).iloc[:, 0:5])
+        seaborn.violinplot(data=escalar_log(banda_norm).iloc[:, 0:5],inner='point')
         plt.ylabel("Potencia en escala log10")
     else:
-        seaborn.swarmplot(data=banda_norm.iloc[:, 0:5])
+        seaborn.violinplot(data=banda_norm.iloc[:, 0:5],inner='point')
         plt.ylim(10e-19, 10e-16)
         plt.ylabel("Potencia")
 
