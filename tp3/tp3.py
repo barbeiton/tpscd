@@ -50,68 +50,6 @@ def Mat2Data(filename):
 
 
 
-
-# In[10]:
-
-#TP2
-# Calculo la potencia total del sujeto en cada banda
-def p_total(sujeto, min, max, escala=1):
-    """ Devuelve la potencia total en la banda [min, max) """
-    
-    return np.sum(filtrar(sujeto, min, max, escala))
-
-
-# In[12]:
-
-#TP2 b) Calcular los valores de cada banda de frecuencia, promediados entre los electrodos (todos) y epochs para cada sujeto.
-def b1(sujeto):
-    """ Para un sujeto hacer el analisis espectral
-    para la señal promedio entre todos los  electrodos y las epochs
-    
-    sujeto : numpy array
-    """
-    
-    a=[]
-    for epoch in range(0, len(sujeto)):
-        a.append(np.mean(sujeto[epoch],axis=0)) # promedio electrodos
-    b = np.mean(a,axis=0) # promedio epochs
-    freq,pot = analisis_espectral(b)
-    
-    return freq,pot
-
-
-# In[13]:
-
-#TP2
-def filtrar(sujeto, min, max, escala=1):
-    """ Dado un sujeto devuelve la potencia de la señal
-    del promedio entre epocs y electrodos en la banda 
-    [min, max)
-    
-    sujeto : numpy array
-    """
-
-    freq, pot = b1(sujeto)
-    banda_pot = [escala * p[1] for p in zip(freq, pot) if p[0] < max and p[0] >= min]
-    return banda_pot
-
-#TP2
-delta = p_total(sujeto, 0, 4.0)
-theta = p_total(sujeto, 4.0, 8.0)
-alpha = p_total(sujeto, 8.0, 13.0)
-beta = p_total(sujeto, 13.0, 30.0)
-gamma = p_total(sujeto, 30.0, 125.0)
-
-
-# In[14]:
-
-#solo para ver 
-cols = ['delta', 'theta', 'alpha', 'beta', 'gamma']
-print(' | '.join(cols))
-potencia = [delta, theta, alpha, beta, gamma]
-print(' | '.join(map(str, potencia)))
-
-
 # In[569]:
 
 ##TP Definiciones
@@ -181,11 +119,14 @@ def dictBandas(inicial):
 
 def load(name):
     """ Lee los datos desde filename (.mat) a un np array """    
-    sujeto_file = './DataSet/'+name+'.mat' #file path de un sujeto    
+    #sujeto_file = './DataSet/'+name+'.mat' #file path de un sujeto    
+    sujeto_file = '/media/mmayol/DISK_IMG/TP2/'+name+'.mat' #file path de un sujeto    
     return Mat2Data(sujeto_file)
 
 
 # In[586]:
+
+electrodos = [7, 43, 79, 130, 184]
 
 # TODO consultar: TP2 b) Calcular los valores de cada banda de frecuencia, promediados entre los electrodos (todos) 
 # y epochs para cada sujeto.
@@ -195,25 +136,35 @@ def load(name):
 def poderEspectral(sujeto):
     poderEpochs = dictBandas([])
     poderNormalizado = dictBandas([])
-    for epoch in range(0, len(sujeto)):#len(sujeto)
+    for epoch in range(0, 1):#len(sujeto)
         poderElectrodos = dictBandas([])
-        for electrodo in range(0, len(sujeto[epoch])):
+        poderElectrodosNorm = dictBandas([])
+        print("listas vacias: " + str(poderElectrodos))
+
+
+        for electrodo in electrodos:
             freq, pot = analisis_espectral(sujeto[epoch][electrodo])                
             poderFreq = dictBandas(0)
-            for f, p in zip(freq, pot):
-            
-                poderFreq[bandaID(f)] += p 
-            
+            for f, p in zip(freq, pot):            
+                poderFreq[bandaID(f)] += p
+ 
+            suma = 0	    
             for banda in range(0, len(bandas)):
                 poderElectrodos[banda].append(poderFreq[banda])
-        
-        suma = 0
+                #print("banda " + str(banda) + ": " + str(poderFreq[banda]))
+                suma+=poderFreq[banda]
+                #print("banda " + str(banda) + ": " + str(poderElectrodos[banda]))
+
+            for banda in range(0, len(bandas)):            
+            	poderElectrodosNorm[banda].append(poderFreq[banda]/suma)
+            
+
         for banda in range(0, len(bandas)):            
             poder = np.mean(poderElectrodos[banda])
             poderEpochs[banda].append(poder)
-            suma+=poder
-        for banda in range(0, len(bandas)):            
-            poderNormalizado[banda].append(poderEpochs[banda]/suma)
+            poderNorm = np.mean(poderElectrodosNorm[banda])           	
+            poderNormalizado[banda].append(poderNorm)
+
     return poderEpochs, poderNormalizado
 
 
@@ -226,9 +177,9 @@ def mainFeatures(outFile):
         poderEspectralEpochs, poderNormalizadoEpochs = poderEspectral(sujeto)
         
         media = np.mean(poderEspectralEpochs, axis=1)
-        media_normalizados = np.mean(poderEspectralEpochs, axis=1)
+        media_normalizados = np.mean(poderNormalizadoEpochs, axis=1)
         desvio = np.std(poderEspectralEpochs, axis=1)
-        desvio_normalizado = np.std(poderEspectralEpochs, axis=1)
+        desvio_normalizado = np.std(poderNormalizadoEpochs, axis=1)
         
         serie = pd.Series(np.concatenate(([paciente],media, media_normalizados, desvio, desvio_normalizado, [paciente[0]]), axis=0))
                          
@@ -244,7 +195,7 @@ def mainFeatures(outFile):
 
 # In[588]:
 
-mainFeatures('features')
+df = mainFeatures('features')
 
 
 # In[ ]:
@@ -255,8 +206,8 @@ mainFeatures('features')
 # In[606]:
 
 #TODO Consultar por el S03 S05, uso el csv sin estos.
-df = pd.read_csv('./features/featuresTest.csv')
-df
+#df = pd.read_csv('./features/featuresTest.csv')
+#df
 
 
 # In[ ]:
