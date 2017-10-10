@@ -12,7 +12,7 @@
 
 
 
-# In[1]:
+# In[7]:
 
 import numpy as np
 import matplotlib
@@ -112,14 +112,14 @@ potencia = [delta, theta, alpha, beta, gamma]
 print(' | '.join(map(str, potencia)))
 
 
-# In[2]:
+# In[569]:
 
 ##TP Definiciones
 bandasRango = {"delta": (0,4.0), "theta": (4.0,8.0), "alpha": (8.0,13.0), "beta": (13.0,30.0), "gamma": (30.0,126.0)}
 bandas = bandasRango.keys()
 
 
-# In[3]:
+# In[570]:
 
 ##TP Definiciones
 labels=['P','S']
@@ -128,7 +128,7 @@ for l in labels:
     pacientes += [l + "{:02d}".format(i) for i in range(1,  11)]
 
 
-# In[4]:
+# In[578]:
 
 columnas = np.concatenate((
     ['name'],
@@ -242,7 +242,7 @@ def mainFeatures(outFile):
     return data
 
 
-# In[ ]:
+# In[588]:
 
 mainFeatures('features')
 
@@ -252,12 +252,19 @@ mainFeatures('features')
 #df = mainFeatures('features')
 
 
-# In[478]:
+# In[606]:
+
+#TODO Consultar por el S03 S05, uso el csv sin estos.
+df = pd.read_csv('./features/featuresTest.csv')
+df
 
 
+# In[ ]:
+
+#df = pd.read_csv('./features/features.csv')
 
 
-# In[5]:
+# In[592]:
 
 def plotROC(xs, ys, name):
     y_true = label_binarize(ys, classes=['P', 'S']).ravel()
@@ -282,7 +289,7 @@ def plotROC(xs, ys, name):
     plt.show()
 
 
-# In[6]:
+# In[593]:
 
 def featuresROC(df, ys):
     
@@ -292,7 +299,7 @@ def featuresROC(df, ys):
         plotROC(xs, ys, name)
 
 
-# In[9]:
+# In[594]:
 
 from sklearn import svm, datasets
 from sklearn.metrics import roc_curve, auc
@@ -302,20 +309,15 @@ from sklearn.multiclass import OneVsRestClassifier
 from scipy import interp
 
 
-# In[7]:
+# In[599]:
 
-df = pd.read_csv('./features/features.csv')
-
-
-# In[31]:
-
-#TODO faltan procesar features. Esto es una prueba
+#TODO consultar
 #ys =['P']*10+['S']*10
-ys =['P']*8+['S']*2
+ys =['P']*10+['S']*8
 featuresROC(df, ys)
 
 
-# In[24]:
+# In[607]:
 
 def featuresCVROC(df, ys):
     
@@ -326,12 +328,12 @@ def featuresCVROC(df, ys):
    
 
 
-# In[25]:
+# In[629]:
 
 #TODO consultar
 def plotCVROC(xs, ys, name):
     y_true = label_binarize(ys, classes=['P', 'S']).ravel()
-   
+       
     # shuffle and split training and test sets
     xs_train, xs_test, y_train, y_test = train_test_split(xs, y_true, test_size=.5,
                                                     random_state=0)
@@ -362,11 +364,15 @@ def plotCVROC(xs, ys, name):
     plt.show()
 
 
-# In[33]:
+# In[636]:
 
-#ys =['P']*10+['S']*10 TODO: Faltan procesar
-ys =['P']*8+['S']*2
-featuresCVROC(df, ys)
+#Consultar
+#ValueError: Found input variables with inconsistent numbers of samples: [1, 9]
+
+#ys =['P']*10+['S']*10
+ys =['P']*10+['S']*8
+
+#featuresCVROC(df, ys)
 
 
 # In[ ]:
