@@ -1,18 +1,15 @@
 
 # coding: utf-8
 
+# In[11]:
+
+
+
 # ##### Los features que vamos a utilizar son:
 # 
 # Potencia para cada banda de frecuencia (Delta, Theta, Alpha, Beta y Gamma)
 
 # Potencia normalizada para las mismas bandas de frecuencia.
-
-# In[ ]:
-
-
-
-
-# In[7]:
 
 import numpy as np
 import matplotlib
@@ -25,17 +22,12 @@ import getopt
 from scipy import stats
 from scipy.signal import welch
 from scipy.io import loadmat  # this is the SciPy module that loads mat-files
-
-
-# In[ ]:
+from collections import OrderedDict
 
 def analisis_espectral(serie):
     """ Transformada de Welch para la serie de tiempo serie"""
 
     return welch(serie, fs=250, nfft=2048, nperseg=201)
-
-
-# In[549]:
 
 #TP2
 def Mat2Data(filename):
@@ -45,28 +37,15 @@ def Mat2Data(filename):
     mdata = mat['data']  # variable in mat file
     return mdata
 
-
-# In[ ]:
-
-
-
-# In[569]:
-
 ##TP Definiciones
-bandasRango = {"delta": (0,4.0), "theta": (4.0,8.0), "alpha": (8.0,13.0), "beta": (13.0,30.0), "gamma": (30.0,126.0)}
-bandas = bandasRango.keys()
-
-
-# In[570]:
+bandasRango = OrderedDict([("delta", (0,4.0)), ("theta", (4.0,8.0)), ("alpha", (8.0,13.0)), ("beta", (13.0,30.0)), ("gamma", (30.0,126.0))])
+bandas = bandasRango.keys() 
 
 ##TP Definiciones
 labels=['P','S']
 pacientes=[]
 for l in labels:
     pacientes += [l + "{:02d}".format(i) for i in range(1,  11)]
-
-
-# In[578]:
 
 columnas = np.concatenate((
     ['name'],
@@ -79,48 +58,19 @@ columnas = np.concatenate((
 columnas
 
 
-# In[584]:
-
-outFile = 'features'
-df = pd.DataFrame(columns=columnas)
-df.to_csv('./features/'+outFile+'.csv', columns=columnas, index =False)
-
-
-
-# In[573]:
 
 ##Definiciones Auxiliares
 def bandaID(freq):
     for k, (_, v) in enumerate(bandasRango.items()):
         if freq >= v[0] and freq < v[1]:
             return k
-          
-
-
-# In[574]:
-
-def dictBandas(inicial):
-    res = []
-    for k in range(0, len(bandas)):
-        res.append(inicial)
-    return res
-
-#def dictBandas(inicial):
-#    res = {}
-#    for k in bandas:        
-#        res[k]=inicial
-#    return res
-
- #for k, v in enumerate(bandasRango.items()):
- #   print(k, v)
-
 
 # In[575]:
 
 def load(name):
     """ Lee los datos desde filename (.mat) a un np array """    
-    #sujeto_file = './DataSet/'+name+'.mat' #file path de un sujeto    
-    sujeto_file = '/media/mmayol/DISK_IMG/TP2/'+name+'.mat' #file path de un sujeto    
+    sujeto_file = './DataSet/'+name+'.mat' #file path de un sujeto    
+    #sujeto_file = '/media/laura/DISK_IMG/TP2/'+name+'.mat' #file path de un sujeto    
     return Mat2Data(sujeto_file)
 
 
@@ -134,39 +84,27 @@ electrodos = [7, 43, 79, 130, 184]
 # El cálculo del poder espectral en cada banda se realiza sumando los valores obtenidos de la FFT que corresponden a las
 # frecuencias incluídas en la misma.
 def poderEspectral(sujeto):
-    poderEpochs = dictBandas([])
-    poderNormalizado = dictBandas([])
-    for epoch in range(0, 1):#len(sujeto)
-        poderElectrodos = dictBandas([])
-        poderElectrodosNorm = dictBandas([])
-        print("listas vacias: " + str(poderElectrodos))
-
+    poderEpochs = []
+    poderNormalizado = []
+    for epoch in range(0, len(sujeto)):#len(sujeto)
+        poderElectrodos = []
+        poderElectrodosNorm = []
 
         for electrodo in electrodos:
             freq, pot = analisis_espectral(sujeto[epoch][electrodo])                
-            poderFreq = dictBandas(0)
+            poderFreq = np.zeros(len(bandas))
             for f, p in zip(freq, pot):            
                 poderFreq[bandaID(f)] += p
- 
-            suma = 0	    
-            for banda in range(0, len(bandas)):
-                poderElectrodos[banda].append(poderFreq[banda])
-                #print("banda " + str(banda) + ": " + str(poderFreq[banda]))
-                suma+=poderFreq[banda]
-                #print("banda " + str(banda) + ": " + str(poderElectrodos[banda]))
-
-            for banda in range(0, len(bandas)):            
-            	poderElectrodosNorm[banda].append(poderFreq[banda]/suma)
             
-
-        for banda in range(0, len(bandas)):            
-            poder = np.mean(poderElectrodos[banda])
-            poderEpochs[banda].append(poder)
-            poderNorm = np.mean(poderElectrodosNorm[banda])           	
-            poderNormalizado[banda].append(poderNorm)
-
-    return poderEpochs, poderNormalizado
-
+            poderElectrodos.append(poderFreq)
+            suma= sum(poderFreq)
+            poderElectrodosNorm.append(poderFreq/suma)
+        
+        poder=list(np.mean(poderElectrodos,axis=0))
+        poderEpochs.append(poder)
+        poderNorm = list(np.mean(poderElectrodosNorm, axis=0))
+        poderNormalizado.append(poderNorm)
+    return poderEpochs, poderNormalizado    
 
 # In[587]:
 
@@ -176,10 +114,10 @@ def mainFeatures(outFile):
         sujeto = load(paciente)
         poderEspectralEpochs, poderNormalizadoEpochs = poderEspectral(sujeto)
         
-        media = np.mean(poderEspectralEpochs, axis=1)
-        media_normalizados = np.mean(poderNormalizadoEpochs, axis=1)
-        desvio = np.std(poderEspectralEpochs, axis=1)
-        desvio_normalizado = np.std(poderNormalizadoEpochs, axis=1)
+        media = np.mean(poderEspectralEpochs, axis=0)
+        media_normalizados = np.mean(poderNormalizadoEpochs, axis=0)
+        desvio = np.std(poderEspectralEpochs, axis=0)
+        desvio_normalizado = np.std(poderNormalizadoEpochs, axis=0)
         
         serie = pd.Series(np.concatenate(([paciente],media, media_normalizados, desvio, desvio_normalizado, [paciente[0]]), axis=0))
                          
@@ -194,28 +132,32 @@ def mainFeatures(outFile):
 
 
 # In[588]:
+def generar():
+    
+    # Par generar el encabezado
+    outFile = 'features'
+    df = pd.DataFrame(columns=columnas)
+    df.to_csv('./features/'+outFile+'.csv', columns=columnas, index =False)
 
-df = mainFeatures('features')
+    return mainFeatures(outFile)
+
+#df=generar()
 
 
-# In[ ]:
+# In[12]:
 
-#df = mainFeatures('features')
-
-
-# In[606]:
-
-#TODO Consultar por el S03 S05, uso el csv sin estos.
-#df = pd.read_csv('./features/featuresTest.csv')
+df = pd.read_csv('./features/features.csv')
 #df
 
 
-# In[ ]:
+# In[15]:
 
-#df = pd.read_csv('./features/features.csv')
-
-
-# In[592]:
+from sklearn import svm, datasets
+from sklearn.metrics import roc_curve, auc
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import label_binarize
+from sklearn.multiclass import OneVsRestClassifier
+from scipy import interp
 
 def plotROC(xs, ys, name):
     y_true = label_binarize(ys, classes=['P', 'S']).ravel()
@@ -239,36 +181,25 @@ def plotROC(xs, ys, name):
     plt.legend(loc="lower right")
     plt.show()
 
-
-# In[593]:
-
 def featuresROC(df, ys):
     
     for k in range(1,20):
         name = columnas[k]
+        print(name)
         xs = np.concatenate(df.loc[:,[name]].values)
         plotROC(xs, ys, name)
 
 
-# In[594]:
 
-from sklearn import svm, datasets
-from sklearn.metrics import roc_curve, auc
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import label_binarize
-from sklearn.multiclass import OneVsRestClassifier
-from scipy import interp
-
-
-# In[599]:
+# In[16]:
 
 #TODO consultar
 #ys =['P']*10+['S']*10
-ys =['P']*10+['S']*8
+ys =['P']*10+['S']*10
 featuresROC(df, ys)
 
 
-# In[607]:
+# In[23]:
 
 def featuresCVROC(df, ys):
     
@@ -276,12 +207,9 @@ def featuresCVROC(df, ys):
         name = columnas[k]
         xs = np.concatenate(df.loc[:,[name]].values)
         plotCVROC(xs, ys, name)
-   
 
 
-# In[629]:
-
-#TODO consultar
+# TODO consultar
 def plotCVROC(xs, ys, name):
     y_true = label_binarize(ys, classes=['P', 'S']).ravel()
        
@@ -315,27 +243,23 @@ def plotCVROC(xs, ys, name):
     plt.show()
 
 
-# In[636]:
+
+# In[24]:
 
 #Consultar
 #ValueError: Found input variables with inconsistent numbers of samples: [1, 9]
 
 #ys =['P']*10+['S']*10
-ys =['P']*10+['S']*8
+ys =['P']*10+['S']*10
 
 #featuresCVROC(df, ys)
 
 
-# In[ ]:
-
-
 
 
 # In[ ]:
-
-
-
 
 # Una medida de información intra-electrodo (a elección)
 
 # Una medida de informacion inter-electrodo (a elección)
+
