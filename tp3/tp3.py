@@ -141,23 +141,27 @@ def generar():
 
     return mainFeatures(outFile)
 
+# sin encabezados en el df, con encabezados en el cvs
 #df=generar()
 
 
-# In[12]:
+# In[161]:
+
 
 df = pd.read_csv('./features/features.csv')
-#df
+df
 
 
-# In[15]:
+# In[166]:
 
-from sklearn import svm, datasets
 from sklearn.metrics import roc_curve, auc
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import label_binarize
-from sklearn.multiclass import OneVsRestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
 from scipy import interp
+
+
+# In[167]:
 
 def plotROC(xs, ys, name):
     y_true = label_binarize(ys, classes=['P', 'S']).ravel()
@@ -183,7 +187,7 @@ def plotROC(xs, ys, name):
 
 def featuresROC(df, ys):
     
-    for k in range(1,20):
+    for k in range(1,21):
         name = columnas[k]
         print(name)
         xs = np.concatenate(df.loc[:,[name]].values)
@@ -191,7 +195,7 @@ def featuresROC(df, ys):
 
 
 
-# In[16]:
+# In[171]:
 
 #TODO consultar
 #ys =['P']*10+['S']*10
@@ -199,11 +203,11 @@ ys =['P']*10+['S']*10
 featuresROC(df, ys)
 
 
-# In[23]:
+# In[172]:
 
 def featuresCVROC(df, ys):
     
-    for k in range(1,20):
+    for k in range(1,21):
         name = columnas[k]
         xs = np.concatenate(df.loc[:,[name]].values)
         plotCVROC(xs, ys, name)
@@ -212,22 +216,31 @@ def featuresCVROC(df, ys):
 # TODO consultar
 def plotCVROC(xs, ys, name):
     y_true = label_binarize(ys, classes=['P', 'S']).ravel()
-       
-    # shuffle and split training and test sets
-    xs_train, xs_test, y_train, y_test = train_test_split(xs, y_true, test_size=.5,
-                                                    random_state=0)
     
-    random_state = np.random.RandomState(0)
-    # Learn to predict each class against the other
-    classifier = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True,
-                                 random_state=random_state))
+    # split X and y into training and testing sets    
+    xs_train, xs_test, y_train, y_test = train_test_split(xs, y_true)
     
-    y_score = classifier.fit(xs_train, y_train).decision_function(xs_test)
-
+    #DeprecationWarning
+    xs_train = xs_train.reshape(-1,1)
+    xs_test = xs_test.reshape(-1,1)    
+        
+    # train a logistic regression model on the training set
+    model = LogisticRegression()
+    model = model.fit(xs_train, y_train)
+    
+    # make class predictions for the testing set
+    #y_pred_class = model.predict(xs_test)    
+    #y_score = model.predict(xs_test)
+    y_predict_probabilities = model.predict_proba(xs_test)[:,0]#[:,1]
+        
+    # calculate accuracy
+    #from sklearn import metrics
+    #metrics.accuracy_score(y_test, y_pred_class)
+    
     # Compute ROC curve and ROC area for each class     
-    fpr, tpr, _ = roc_curve(y_test, y_score)
+    fpr, tpr, _ = roc_curve(y_test, y_predict_probabilities)
     roc_auc = auc(fpr, tpr)
-
+    
     plt.figure()
     lw = 2
     plt.plot(fpr, tpr, color='darkorange',
@@ -244,22 +257,29 @@ def plotCVROC(xs, ys, name):
 
 
 
-# In[24]:
-
-#Consultar
-#ValueError: Found input variables with inconsistent numbers of samples: [1, 9]
+# In[174]:
 
 #ys =['P']*10+['S']*10
 ys =['P']*10+['S']*10
 
-#featuresCVROC(df, ys)
+featuresCVROC(df, ys)
+
+
+
+
+# In[165]:
+
+# Una medida de información intra-electrodo (a elección)
+
+# Una medida de informacion inter-electrodo (a elección)
+
+
+# In[ ]:
 
 
 
 
 # In[ ]:
 
-# Una medida de información intra-electrodo (a elección)
 
-# Una medida de informacion inter-electrodo (a elección)
 
