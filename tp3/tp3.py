@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[11]:
+# In[24]:
 
 
 
@@ -28,7 +28,6 @@ def analisis_espectral(serie):
     """ Transformada de Welch para la serie de tiempo serie"""
 
     return welch(serie, fs=250, nfft=2048, nperseg=201)
-
 
 def fix_max(x, m):
     """ Funcion para poner el maximo de la serie en el
@@ -137,8 +136,7 @@ columnas = np.concatenate((
     ['inter_desvio'],
     ['label']
 ))
-columnas
-
+#columnas
 
 ##Definiciones Auxiliares
 def bandaID(freq):
@@ -146,17 +144,19 @@ def bandaID(freq):
         if freq >= v[0] and freq < v[1]:
             return k
 
-# In[575]:
+
+
+# In[25]:
 
 def load(name):
     """ Lee los datos desde filename (.mat) a un np array """    
-    #sujeto_file = './DataSet/'+name+'.mat' #file path de un sujeto    
+    sujeto_file = './DataSet/'+name+'.mat' #file path de un sujeto    
     #sujeto_file = '/media/laura/DISK_IMG/TP2/'+name+'.mat' #file path de un sujeto    
-    sujeto_file = '/home/nico/Descargas/datos EEG/'+name+'.mat'
+    #sujeto_file = '/home/nico/Descargas/datos EEG/'+name+'.mat'
     return Mat2Data(sujeto_file)
 
 
-# In[586]:
+# In[26]:
 
 electrodos = [7, 43, 79, 130, 184]
 
@@ -204,8 +204,6 @@ def informacionPorEpoch(sujeto):
     return intraPorEpoch, interPorEpoch
 
 
-# In[587]:
-
 def mainFeatures(outFile):
     data = pd.DataFrame({})
     for paciente in pacientes:
@@ -243,7 +241,6 @@ def mainFeatures(outFile):
     return data
 
 
-# In[588]:
 def generar():
     
     # Par generar el encabezado
@@ -253,37 +250,37 @@ def generar():
 
     return mainFeatures(outFile)
 
+
+# In[27]:
+
 # sin encabezados en el df, con encabezados en el cvs
-"""df=generar()"""
+#df=generar()
 
 
-# In[161]:
+# In[28]:
 
-
-df = pd.read_csv('./features.csv')
+df = pd.read_csv('./features/features.csv')
 df
 
 
-# In[166]:
+# In[29]:
 
-from sklearn import svm
 from sklearn.metrics import roc_curve, auc
 from sklearn.preprocessing import label_binarize
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from scipy import interp
 
 
-# In[167]:
+# In[30]:
 
 def plotROC(xs, ys, name):
+    print(name)
     y_true = label_binarize(ys, classes=['P', 'S']).ravel()
     y_score = xs
 
     # Compute ROC curve and ROC area for each class     
     fpr, tpr, _ = roc_curve(y_true, y_score)
     roc_auc = auc(fpr, tpr)
-
+        
     plt.figure()
     lw = 2
     plt.plot(fpr, tpr, color='darkorange',
@@ -302,26 +299,28 @@ def featuresROC(df, ys):
     
     for k in range(1,25):
         name = columnas[k]
-        print(name)
+        
         xs = np.concatenate(df.loc[:,[name]].values)
-        plotROC(xs, ys, name)
+        plotROC(xs, ys, name,)
 
 
-
-# In[171]:
+# In[31]:
 
 #TODO consultar
 #ys =['P']*10+['S']*10
-"""
+
 ys =['P']*10+['S']*10
 featuresROC(df, ys)
-"""
 
-# In[172]:
+
+# In[32]:
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegressionCV
 
 def featuresCVROC(df, ys):
     
-    for k in range(1,21):
+    for k in range(1,25):
         name = columnas[k]
         xs = np.concatenate(df.loc[:,[name]].values)
         plotCVROC(xs, ys, name)
@@ -329,6 +328,7 @@ def featuresCVROC(df, ys):
 
 # TODO consultar
 def plotCVROC(xs, ys, name):
+    print(name)
     y_true = label_binarize(ys, classes=['P', 'S']).ravel()
     
     # split X and y into training and testing sets    
@@ -339,8 +339,13 @@ def plotCVROC(xs, ys, name):
     xs_test = xs_test.reshape(-1,1)    
         
     # train a logistic regression model on the training set
-    model = LogisticRegression()
-    model = model.fit(xs_train, y_train)
+    #model = LogisticRegression()
+    #model = model.fit(xs_train, y_train)
+    
+    
+    #LogisticRegressionCV implements Logistic Regression with builtin cross-validation
+    model = LogisticRegressionCV()
+    model = model.fit(xs_train, y_train)    
     
     # make class predictions for the testing set
     #y_pred_class = model.predict(xs_test)    
@@ -354,6 +359,8 @@ def plotCVROC(xs, ys, name):
     # Compute ROC curve and ROC area for each class     
     fpr, tpr, _ = roc_curve(y_test, y_predict_probabilities)
     roc_auc = auc(fpr, tpr)
+    #print('y_test:', y_test)
+    #print('y_prob:', y_predict_probabilities)
     
     plt.figure()
     lw = 2
@@ -369,27 +376,198 @@ def plotCVROC(xs, ys, name):
     plt.legend(loc="lower right")
     plt.show()
 
+# TODO eliminar codigo repetido :(
 
 
-# In[174]:
-
-#ys =['P']*10+['S']*10
-"""ys =['P']*10+['S']*10
+# In[33]:
 
 featuresCVROC(df, ys)
-"""
 
-# In[165]:
-target_values = np.array(df.loc[range(2,18), ['label']]).ravel()
-samples = df.loc[range(2,18),columnas[1:25]]
+
+# In[34]:
+
+from sklearn import svm
+
+def featuresSVMROC(df, ys):
+    xs = df.loc[:,columnas[1:25]]
+    plotSVMROC(xs, ys)
+
+# TODO consultar
+def plotSVMROC(xs, ys):    
+    y_true = label_binarize(ys, classes=['P', 'S']).ravel()
+    
+    # split X and y into training and testing sets    
+    xs_train, xs_test, y_train, y_test = train_test_split(xs, y_true)
+    
+    #DeprecationWarning
+    #xs_train = xs_train.reshape(-1,1)
+    #xs_test = xs_test.reshape(-1,1)    
         
-clf = svm.SVC()
-clf.fit(samples, target_values)
-print(clf.predict(df.loc[[0,1,18,19],columnas[1:25]]))
+    # train model on the training set
+    model = svm.SVC(probability=True)
+    model = model.fit(xs_train, y_train)
+    
+    # make class predictions for the testing set
+    #y_pred_class = model.predict(xs_test)    
+    #y_score = model.predict(xs_test)
+    y_predict_probabilities = model.predict_proba(xs_test)[:,0]#[:,1]
+        
+    # Compute ROC curve and ROC area for each class     
+    fpr, tpr, _ = roc_curve(y_test, y_predict_probabilities)
+    roc_auc = auc(fpr, tpr)
+        
+    plt.figure()
+    lw = 2
+    plt.plot(fpr, tpr, color='darkorange',
+         lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    #plt.title('Receiver operating characteristic example')
+    plt.title('ROC Curve SVM')
+    plt.legend(loc="lower right")
+    plt.show()
 
-# In[ ]:
+
+# In[35]:
+
+featuresSVMROC(df, ys)
 
 
+# In[36]:
+
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import SelectPercentile
+
+def featuresPipelineSVMROC(df, ys, n_percentile):
+    xs = df.loc[:,columnas[1:25]]    
+    plotPipelineSVMROC(xs, ys, n_percentile)
+
+# TODO consultar
+def plotPipelineSVMROC(xs, ys, n_percentile):    
+    y_true = label_binarize(ys, classes=['P', 'S']).ravel()
+    
+    # split X and y into training and testing sets    
+    xs_train, xs_test, y_train, y_test = train_test_split(xs, y_true)
+    
+    #1. Standard Scaler
+    #2. Feature Selection utilizando solo el 10%.
+    #3. SVC            
+    model = make_pipeline(StandardScaler(), SelectPercentile(percentile=n_percentile), svm.SVC(probability=True))
+    print('percentile:', n_percentile)
+    
+    # train model on the training set    
+    model = model.fit(xs_train, y_train)
+    
+    # make class predictions for the testing set
+    #y_pred_class = model.predict(xs_test)    
+    #y_score = model.predict(xs_test)
+    y_predict_probabilities = model.predict_proba(xs_test)[:,0]#[:,1]
+        
+    # Compute ROC curve and ROC area for each class     
+    fpr, tpr, _ = roc_curve(y_test, y_predict_probabilities)
+    roc_auc = auc(fpr, tpr)
+    print('y_test:', y_test)
+    print('y_prob:', y_predict_probabilities)
+    
+    plt.figure()
+    lw = 2
+    plt.plot(fpr, tpr, color='darkorange',
+         lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    #plt.title('Receiver operating characteristic example')
+    plt.title('ROC Curve Pipeline SVM')
+    plt.legend(loc="lower right")
+    plt.show()
+
+
+# In[37]:
+
+featuresPipelineSVMROC(df, ys, 10)
+
+
+# In[38]:
+
+featuresPipelineSVMROC(df, ys, 25)
+
+
+# In[39]:
+
+featuresPipelineSVMROC(df, ys, 35)
+
+
+# In[40]:
+
+#Punto 1
+#primera parte.
+#Para ver agrupadas
+def plotAllROC(xs, ys, name):
+    y_true = label_binarize(ys, classes=['P', 'S']).ravel()
+    y_score = xs
+
+    # Compute ROC curve and ROC area for each class     
+    fpr, tpr, _ = roc_curve(y_true, y_score)
+    roc_auc = auc(fpr, tpr)
+
+    lw = 2
+    plt.plot(fpr, tpr, 
+         lw=lw, label='ROC curve {}(area = {:0.2f})'.format(name, roc_auc))
+        
+
+def featuresAllROC(df, ys, lista):
+    plt.figure()
+    lw = 2
+    for k in lista:
+        name = columnas[k]
+        xs = np.concatenate(df.loc[:,[name]].values)
+        plotAllROC(xs, ys, name)
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    #plt.title('Receiver operating characteristic example')
+    plt.legend(loc="lower right")
+    plt.title('ROC Curve ')
+    plt.show()
+    
+
+
+# In[41]:
+
+featuresAllROC(df, ys, range(1,6))
+
+
+# In[42]:
+
+featuresAllROC(df, ys, range(6,11))
+
+
+# In[43]:
+
+featuresAllROC(df, ys, range(11,16))
+
+
+# In[44]:
+
+featuresAllROC(df, ys, range(16,21))
+
+
+# In[45]:
+
+featuresAllROC(df, ys, range(21,25))
+
+
+# In[46]:
+
+featuresAllROC(df, ys, [3,8,13,18])
 
 
 # In[ ]:
