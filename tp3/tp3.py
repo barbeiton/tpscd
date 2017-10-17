@@ -29,6 +29,83 @@ def analisis_espectral(serie):
 
     return welch(serie, fs=250, nfft=2048, nperseg=201)
 
+
+def fix_max(x, m):
+    """ Funcion para poner el maximo de la serie en el
+    bin que le corresponde """
+    if int(x) == m:
+        return m - 1
+    else:
+        return x
+    
+def symb(serie):
+    """ Dada una serie continua devuelve una 
+    representación en símbolos y el simbolo mayor. 
+    Cada simbolo es un entero mayor o igual a cero.
+    Usa la regla de Scott """
+    
+    # Computo el N
+    std = np.std(serie)
+    maximo = np.amax(serie)
+    minimo = np.amin(serie)
+    t = np.power(len(serie), -1/3)
+    #print([std, maximo, minimo, t])
+    N = np.ceil((maximo - minimo) / (3.5*std*t))
+    
+    # Transformo la serie en simbolos
+    step = np.abs(maximo - minimo)/N
+    simb = np.floor(np.divide(np.subtract(serie, np.amin(serie)), step))
+    
+    return int(N), np.array([fix_max(s, int(N)) for s in simb])
+
+
+def prob(serie):
+    """ Dada una serie de numeros, devuelve la distribucion
+    de los simbolos que la representan.
+    """
+    
+    bins, simbolos = symb(serie)
+    if bins == 0:
+        print("BINS DIO CERO!")
+    if bins - 1 != np.amax(simbolos):
+        print("PROBLEMAS!!")
+            
+            
+    hist = [0] * bins
+    for s in simbolos:
+        hist[int(s)] = hist[int(s)] + 1
+                
+    return np.divide(hist, np.sum(hist))
+        
+
+def entropia(serie):
+    """ Calcula la entropia de la señal serie, medida en bits """
+    
+    p = prob(serie)
+    p = p[p>0]
+    return -np.inner(p, np.log2(p))
+
+
+def entropia_conjunta(serie1, serie2):
+    """ Calcula la entropía conjunta de las dos
+    series parámetro """
+    
+    bins1, s1 = symb(serie1)
+    bins2, s2 = symb(serie2)
+    
+    hist = {}
+    for ss1 in s1:
+        for ss2 in s2:
+            if str(ss1)+'-'+str(ss2) in hist:
+                hist[str(ss1)+'-'+str(ss2)] = hist[str(ss1)+'-'+str(ss2)] + 1
+            else:
+                hist[str(ss1)+'-'+str(ss2)] = 1
+                
+    values = list(hist.values())
+    probs = np.divide(values, np.sum(values))
+    return -np.inner(probs, np.log2(probs))
+
+
 #TP2
 def Mat2Data(filename):
     """ Lee los datos desde filename (.mat) a un np array """
@@ -47,16 +124,20 @@ pacientes=[]
 for l in labels:
     pacientes += [l + "{:02d}".format(i) for i in range(1,  11)]
 
+
 columnas = np.concatenate((
     ['name'],
     list(map(lambda n: n+'_m', bandas)), 
     list(map(lambda n: n+'_norm_m', bandas)), 
     list(map(lambda n: n+'_std', bandas)),
     list(map(lambda n: n+'_norm_std', bandas)),
+    ['intra_media'],
+    ['intra_desvio'],
+    ['inter_media'],
+    ['inter_desvio'],
     ['label']
 ))
 columnas
-
 
 
 ##Definiciones Auxiliares
@@ -69,8 +150,9 @@ def bandaID(freq):
 
 def load(name):
     """ Lee los datos desde filename (.mat) a un np array """    
-    sujeto_file = './DataSet/'+name+'.mat' #file path de un sujeto    
+    #sujeto_file = './DataSet/'+name+'.mat' #file path de un sujeto    
     #sujeto_file = '/media/laura/DISK_IMG/TP2/'+name+'.mat' #file path de un sujeto    
+    sujeto_file = '/home/nico/Descargas/datos EEG/'+name+'.mat'
     return Mat2Data(sujeto_file)
 
 
@@ -106,20 +188,50 @@ def poderEspectral(sujeto):
         poderNormalizado.append(poderNorm)
     return poderEpochs, poderNormalizado    
 
+# Calcula las medidas de informacion de un paciente para
+# utilizar en una como feature.
+def informacionPorEpoch(sujeto):
+    intraPorEpoch = []
+    interPorEpoch = []
+
+    for epoch in range(0, len(sujeto)):
+        intraPorEpoch.append(entropia(sujeto[epoch][electrodos[0]]))
+
+        serie1 = sujeto[epoch][electrodos[0]]
+        serie2 = sujeto[epoch][electrodos[1]]
+        interPorEpoch.append(entropia_conjunta(serie1, serie2))
+
+    return intraPorEpoch, interPorEpoch
+
+
 # In[587]:
 
 def mainFeatures(outFile):
     data = pd.DataFrame({})
     for paciente in pacientes:
+        print("Extrayendo features del paciente " + paciente)
         sujeto = load(paciente)
         poderEspectralEpochs, poderNormalizadoEpochs = poderEspectral(sujeto)
         
-        media = np.mean(poderEspectralEpochs, axis=0)
+        # Espectrales
+        media_espectral = np.mean(poderEspectralEpochs, axis=0)
         media_normalizados = np.mean(poderNormalizadoEpochs, axis=0)
-        desvio = np.std(poderEspectralEpochs, axis=0)
+        desvio_espectral = np.std(poderEspectralEpochs, axis=0)
         desvio_normalizado = np.std(poderNormalizadoEpochs, axis=0)
+
+        # Informacion
+        intraPorEpoch, interPorEpoch = informacionPorEpoch(sujeto)
+        intra_media = np.mean(intraPorEpoch)
+        intra_desvio = np.std(intraPorEpoch)
+        inter_media = np.mean(interPorEpoch)
+        inter_desvio = np.std(interPorEpoch)
         
-        serie = pd.Series(np.concatenate(([paciente],media, media_normalizados, desvio, desvio_normalizado, [paciente[0]]), axis=0))
+        serie = pd.Series(np.concatenate(([paciente],media_espectral, 
+                                                    media_normalizados, 
+                                                    desvio_espectral, 
+                                                    desvio_normalizado, 
+                                                    [intra_media, intra_desvio, inter_media, inter_desvio],
+                                                    [paciente[0]]), axis=0))
                          
         #save to csv
         df = pd.DataFrame({})
@@ -187,7 +299,7 @@ def plotROC(xs, ys, name):
 
 def featuresROC(df, ys):
     
-    for k in range(1,21):
+    for k in range(1,25):
         name = columnas[k]
         print(name)
         xs = np.concatenate(df.loc[:,[name]].values)
@@ -201,6 +313,7 @@ def featuresROC(df, ys):
 #ys =['P']*10+['S']*10
 ys =['P']*10+['S']*10
 featuresROC(df, ys)
+sys.exit()
 
 
 # In[172]:
