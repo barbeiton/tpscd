@@ -254,18 +254,19 @@ def generar():
     return mainFeatures(outFile)
 
 # sin encabezados en el df, con encabezados en el cvs
-#df=generar()
+"""df=generar()"""
 
 
 # In[161]:
 
 
-df = pd.read_csv('./features/features.csv')
+df = pd.read_csv('./features.csv')
 df
 
 
 # In[166]:
 
+from sklearn import svm
 from sklearn.metrics import roc_curve, auc
 from sklearn.preprocessing import label_binarize
 from sklearn.model_selection import train_test_split
@@ -311,10 +312,10 @@ def featuresROC(df, ys):
 
 #TODO consultar
 #ys =['P']*10+['S']*10
+"""
 ys =['P']*10+['S']*10
 featuresROC(df, ys)
-sys.exit()
-
+"""
 
 # In[172]:
 
@@ -373,19 +374,18 @@ def plotCVROC(xs, ys, name):
 # In[174]:
 
 #ys =['P']*10+['S']*10
-ys =['P']*10+['S']*10
+"""ys =['P']*10+['S']*10
 
 featuresCVROC(df, ys)
-
-
-
+"""
 
 # In[165]:
-
-# Una medida de información intra-electrodo (a elección)
-
-# Una medida de informacion inter-electrodo (a elección)
-
+target_values = np.array(df.loc[range(2,18), ['label']]).ravel()
+samples = df.loc[range(2,18),columnas[1:25]]
+        
+clf = svm.SVC()
+clf.fit(samples, target_values)
+print(clf.predict(df.loc[[0,1,18,19],columnas[1:25]]))
 
 # In[ ]:
 
