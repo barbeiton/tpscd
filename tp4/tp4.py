@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import csv
 import networkx as nx
+import seaborn
+from random import choice
 
 def get_autores(linea):
     autores = linea[3]
@@ -51,11 +53,11 @@ plt.ylabel('Grado')
 plt.savefig('graficos/dg_loglog.jpg', dpi=300)
 plt.close()
 
-plt.semilogy(dg)
-plt.title('Distribución de grado (semilog y)')
+plt.semilogx(dg)
+plt.title('Distribución de grado (semilog x)')
 plt.xlabel('Nodo')
 plt.ylabel('Grado')
-plt.savefig('graficos/dg_semilog.jpg', dpi=300)
+plt.savefig('graficos/dg_semilogx.jpg', dpi=300)
 plt.close()
 
 # Punto 3 : Componentes Conexas
@@ -67,6 +69,41 @@ cg = max(nx.connected_component_subgraphs(G), key=len)
 tamcg = len(list(cg.nodes()))
 print("Tamaño de la componente gigante: " + str(tamcg))
 
+# Punto 4 : Componentes Conexas
 
+def tamañoVecino(cg):
+    a=[]
+    c=[]
+    random_node = choice(list(cg.nodes()))
+    for i in range (0,20):
+        b=[]
+        b=nx.ego_graph(cg, random_node, radius=i, center=False)
+        if i==0:
+            c.append(len(b))
+        else:   
+            c.append(len(b)-(a[i-1]))
+ 
+        a.append(len(b))
+    
+    plt.plot(a)
+    plt.show()
+    plt.close()
+    
+    plt.plot(c)
+    plt.show()
+    plt.close()        
+
+
+tamañoVecino(cg)
+
+    
+
+    
+
+    
+    
+    
+    
+    
 
 
