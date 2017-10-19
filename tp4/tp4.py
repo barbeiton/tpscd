@@ -5,6 +5,8 @@ import csv
 import networkx as nx
 import seaborn
 from random import choice
+import operator
+
 
 def get_autores(linea):
     autores = linea[3]
@@ -71,7 +73,9 @@ cg = max(nx.connected_component_subgraphs(G), key=len)
 tamcg = len(list(cg.nodes()))
 print("Tamaño de la componente gigante: " + str(tamcg))
 
-# Punto 4 : Componentes Conexas
+
+"""
+# Punto 4 : Tamaños de Vecindades
 def tamañoVecino(cg):
     a=[]
     c=[]
@@ -97,7 +101,7 @@ maximos=[]
 fig, ax = plt.subplots()
 for color, i in zip(colors, iterations):
     ax.plot(tamañoVecino(cg)[0],color=color)
-plt.title('Tamaño de vecindades 1')
+plt.title('Tamaño de vecindades')
 plt.xlabel('Paso/distancia')
 plt.ylabel('Numero de autores alcanzados')
 plt.savefig('graficos/tamañodeVecindades1.jpg', dpi=300)
@@ -107,19 +111,62 @@ fig, ax1 = plt.subplots()
 for color, i in zip(colors, iterations):
     ax1.plot(tamañoVecino(cg)[1],color=color)
     maximos.append(tamañoVecino(cg)[2])
-plt.title('Tamaño de vecindades 2')
+plt.title('Autores nuevos por paso')
 plt.xlabel('Paso')
 plt.ylabel('Numero de autores nuevos')
 plt.savefig('graficos/tamañodeVecindades2.jpg', dpi=300)
 plt.close()
 
-print(np.mean(maximos))
-    
+print('Paso asociado al mayor número de autores nuevos - valor medio de todas las iteraciones: ' + str(np.mean(maximos)))
+ 
 
-    
-    
-    
-    
-    
+# Punto 5 : Mundos Pequeños
+nx.draw(cg)  # networkx draw()
+plt.draw()  # pyplot draw()
+plt.show()
 
 
+C= nx.average_clustering(cg)
+print("Coeficiente de clustering C para cg: " + str(C))
+
+l=nx.average_shortest_path_length(cg)
+print("Camino mínimo medio l para cg: " + str(l))   
+
+#random graph con la misma distribucón de grado    
+rg = nx.random_degree_sequence_graph(sorted([e[1] for e in list(nx.degree(cg))], reverse=True))     
+
+nx.draw(rg)  # networkx draw()
+plt.draw()  # pyplot draw()
+plt.show()
+
+print("Coeficiente de clustering C para rg: " + str(nx.average_clustering(rg)))    
+print("Camino mínimo medio l para rg: " + str(nx.average_shortest_path_length(rg)))
+"""   
+# Punto 6 : Estrellas
+
+#Medida 1 para identificar estrellas
+degree_dict = dict(cg.degree(cg.nodes())) # Run degree centrality
+betweenness_dict = nx.betweenness_centrality(cg) # Run betweenness centrality
+eigenvector_dict = nx.eigenvector_centrality(cg) # Run eigenvector centrality
+
+# Assign each to an attribute in your network
+nx.set_node_attributes(G, betweenness_dict, 'betweenness')
+nx.set_node_attributes(G, eigenvector_dict, 'eigenvector')
+nx.set_node_attributes(cg, degree_dict, 'degree')
+
+sorted_degree = sorted(degree_dict.items(), key=operator.itemgetter(1), reverse=True)
+sorted_betweenness = sorted(betweenness_dict.items(), key=operator.itemgetter(1), reverse=True)
+sorted_eigenvector = sorted(eigenvector_dict.items(), key=operator.itemgetter(1), reverse=True)
+
+
+print("Top 20 nodos por degree:")
+for d in sorted_degree[:20]:
+    print(d)
+
+print("Top 20 nodos por betweenness:")
+for d in sorted_betweenness[:20]:
+    print(d)
+    
+print("Top 20 nodos por eigenvector:")
+for d in sorted_eigenvector[:20]:
+    print(d)
