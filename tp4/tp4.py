@@ -1,3 +1,5 @@
+import matplotlib as mpl
+import numpy as np
 import matplotlib.pyplot as plt
 import csv
 import networkx as nx
@@ -70,7 +72,6 @@ tamcg = len(list(cg.nodes()))
 print("Tamaño de la componente gigante: " + str(tamcg))
 
 # Punto 4 : Componentes Conexas
-
 def tamañoVecino(cg):
     a=[]
     c=[]
@@ -84,20 +85,35 @@ def tamañoVecino(cg):
             c.append(len(b)-(a[i-1]))
  
         a.append(len(b))
-    
-    plt.plot(a)
-    plt.show()
-    plt.close()
-    
-    plt.plot(c)
-    plt.show()
-    plt.close()        
+    return a , c , c.index(max(c))
 
 
-tamañoVecino(cg)
 
-    
+iterations=np.arange(1,10,1)
+n= len(iterations)
+colors = mpl.cm.gist_rainbow(np.linspace(0, 1, n))
+maximos=[]
 
+fig, ax = plt.subplots()
+for color, i in zip(colors, iterations):
+    ax.plot(tamañoVecino(cg)[0],color=color)
+plt.title('Tamaño de vecindades 1')
+plt.xlabel('Paso/distancia')
+plt.ylabel('Numero de autores alcanzados')
+plt.savefig('graficos/tamañodeVecindades1.jpg', dpi=300)
+plt.close()
+
+fig, ax1 = plt.subplots()
+for color, i in zip(colors, iterations):
+    ax1.plot(tamañoVecino(cg)[1],color=color)
+    maximos.append(tamañoVecino(cg)[2])
+plt.title('Tamaño de vecindades 2')
+plt.xlabel('Paso')
+plt.ylabel('Numero de autores nuevos')
+plt.savefig('graficos/tamañodeVecindades2.jpg', dpi=300)
+plt.close()
+
+print(np.mean(maximos))
     
 
     
