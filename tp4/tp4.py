@@ -74,7 +74,7 @@ tamcg = len(list(cg.nodes()))
 print("Tamaño de la componente gigante: " + str(tamcg))
 
 
-"""
+
 # Punto 4 : Tamaños de Vecindades
 def tamañoVecino(cg):
     a=[]
@@ -120,6 +120,8 @@ plt.close()
 print('Paso asociado al mayor número de autores nuevos - valor medio de todas las iteraciones: ' + str(np.mean(maximos)))
  
 
+
+
 # Punto 5 : Mundos Pequeños
 nx.draw(cg)  # networkx draw()
 plt.draw()  # pyplot draw()
@@ -141,10 +143,14 @@ plt.show()
 
 print("Coeficiente de clustering C para rg: " + str(nx.average_clustering(rg)))    
 print("Camino mínimo medio l para rg: " + str(nx.average_shortest_path_length(rg)))
-"""   
-# Punto 6 : Estrellas
+ 
 
-#Medida 1 para identificar estrellas
+
+
+
+
+
+# Punto 6 : Estrellas
 degree_dict = dict(cg.degree(cg.nodes())) # Run degree centrality
 betweenness_dict = nx.betweenness_centrality(cg) # Run betweenness centrality
 eigenvector_dict = nx.eigenvector_centrality(cg) # Run eigenvector centrality
@@ -158,15 +164,31 @@ sorted_degree = sorted(degree_dict.items(), key=operator.itemgetter(1), reverse=
 sorted_betweenness = sorted(betweenness_dict.items(), key=operator.itemgetter(1), reverse=True)
 sorted_eigenvector = sorted(eigenvector_dict.items(), key=operator.itemgetter(1), reverse=True)
 
+#top 20 nodes by degree as a list
+top_degree = sorted_degree[:20]
+print("Top 20 nodos por Degree")
+for td in top_degree:
+    print("Name:", td[0], "| Degree Centrality:", td[1])
+print(" ")
 
-print("Top 20 nodos por degree:")
-for d in sorted_degree[:20]:
-    print(d)
 
-print("Top 20 nodos por betweenness:")
-for d in sorted_betweenness[:20]:
-    print(d)
-    
-print("Top 20 nodos por eigenvector:")
-for d in sorted_eigenvector[:20]:
-    print(d)
+#top 20 nodes by betweenness as a list
+top_betweenness = sorted_betweenness[:20]
+
+
+print("Top 20 nodos por Betweenness")
+for tb in top_betweenness: # Loop through top_betweenness
+    degree = degree_dict[tb[0]] # Use degree_dict to access a node's degree, see footnote 2
+    eigenvector=eigenvector_dict[tb[0]]
+    print("Name:", tb[0], "| Betweenness Centrality:", tb[1], "| Degree:", degree, "| Eigenvector:", eigenvector)
+
+print(" ")
+
+#top 20 nodes by eigenvector as a list
+top_eigenvector = sorted_eigenvector[:20]
+print("Top 20 nodos por Eigenvector")
+for te in top_eigenvector: 
+    degree = degree_dict[te[0]] 
+    betweenness=betweenness_dict[te[0]]
+    print("Name:", te[0], "| Eigenvector Centrality:", te[1], "| Degree:", degree, "| Betweenness:", eigenvector)
+
